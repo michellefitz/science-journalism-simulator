@@ -22,12 +22,16 @@ Nothing is transmitted anywhere; the pages hold no data, set no cookies, and wor
 
 ## Hosting
 
-Public URLs, once GitHub Pages is enabled on the repo:
+Deployed on Vercel from `docs/`, built by `vercel.json`:
 
-- **Participants** — `https://michellefitz.github.io/science-journalism-simulator/`
-- **Facilitator** — `https://michellefitz.github.io/science-journalism-simulator/facilitator.html`
+- **Participants** — `https://science-journalism-simulator.vercel.app`
+- **Facilitator** — `https://science-journalism-simulator.vercel.app/facilitator`
 
-To turn it on: **Settings → Pages → Source: GitHub Actions**. The workflow in `.github/workflows/pages.yml` runs `build.mjs` on every push, so the live site is rebuilt from source and cannot drift. (Deploying from a branch with the `/docs` folder also works — `docs/` is committed — but then you must remember to run `node build.mjs` yourself after editing.)
+`vercel.json` sets the build command to `node build.mjs` and the output directory to `docs`, with `cleanUrls` on so `/facilitator` works without the extension. Vercel rebuilds on every push to `main`, so the live site cannot drift from the sources.
+
+This matters more than it looks: without that config Vercel would serve the repository root, where `index.html` is the artifact source with no viewport meta tag, and the simulation would lay out at desktop width on every participant's phone.
+
+The GitHub Actions workflow is kept as CI rather than deployment. It rebuilds `docs/`, fails if the committed output has drifted from the sources, and refuses any page that references an external asset — the workshop has to run with the venue wifi down.
 
 ### Why there's a build step at all
 
