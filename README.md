@@ -10,14 +10,30 @@ Ten decisions, each on a countdown, delivered as a phone thread — wire alerts,
 
 ## Files
 
-| File | What it is | Published |
-|---|---|---|
-| `index.html` | The simulation. Self-contained — no build, no dependencies, no network calls. | [play it](https://claude.ai/code/artifact/51821151-0c67-465e-b21a-d7fe8229c533) |
-| `facilitator.html` | The run-of-show guide: timings, discussion questions, assessment rubric, the ground truth. | [read it](https://claude.ai/code/artifact/fc08bb69-87e5-4236-a5c9-2ae16688e837) |
+| File | What it is |
+|---|---|
+| `index.html` | The simulation. Self-contained — no dependencies, no network calls. |
+| `facilitator.html` | The run-of-show guide: timings, discussion questions, assessment rubric, the ground truth. |
+| `build.mjs` | Wraps both into standalone pages in `docs/` for hosting. |
 
-The participant link is the simulation. The facilitator guide is for whoever runs the room and contains the ending, so don't circulate it to participants beforehand.
+The participant link is the simulation. The facilitator guide is for whoever runs the room and **contains the ending**, so don't circulate it to participants beforehand.
 
-Both are single files that open directly in a browser (`open index.html`) and are also published as hosted pages. Nothing is transmitted anywhere; the pages hold no data and set no cookies.
+Nothing is transmitted anywhere; the pages hold no data, set no cookies, and work with the venue wifi down.
+
+## Hosting
+
+Public URLs, once GitHub Pages is enabled on the repo:
+
+- **Participants** — `https://michellefitz.github.io/science-journalism-simulator/`
+- **Facilitator** — `https://michellefitz.github.io/science-journalism-simulator/facilitator.html`
+
+To turn it on: **Settings → Pages → Source: GitHub Actions**. The workflow in `.github/workflows/pages.yml` runs `build.mjs` on every push, so the live site is rebuilt from source and cannot drift. (Deploying from a branch with the `/docs` folder also works — `docs/` is committed — but then you must remember to run `node build.mjs` yourself after editing.)
+
+### Why there's a build step at all
+
+`index.html` and `facilitator.html` are written as *artifact sources*: no `<!doctype>`, `<html>`, `<head>` or `<body>`, because the Claude artifact runtime injects that skeleton at publish time. Served raw from a static host they would have no charset and — the one that actually breaks things — **no viewport meta tag**, so phones would lay the simulation out at desktop width and the whole thing would be unusable. `build.mjs` adds the skeleton, the viewport tag, an emoji favicon and social metadata, and writes the result to `docs/`.
+
+Edit the sources, never `docs/`.
 
 ---
 

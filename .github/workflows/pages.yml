@@ -1,0 +1,54 @@
+name: Deploy to GitHub Pages
+
+# Rebuilds docs/ from the artifact sources and publishes it, so the live site
+# can never drift from index.html / facilitator.html.
+
+on:
+  push:
+    branches: [claude/journalism-crisis-sim-xv73rc, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Build standalone pages
+        run: node build.mjs
+      - name: Check the build is self-contained
+        run: |
+          # A strict-CSP-free static host will happily load remote assets, but
+          # this project is meant to work offline in a conference room.
+          if grep -rEq '<(script|link|img)[^>]+(src|href)="https?://' docs/; then
+            echo "External asset reference found in docs/ - the workshop must run without network."
+            grep -rEn '<(script|link|img)[^>]+(src|href)="https?://' docs/
+            exit 1
+          fi
+          test -s docs/index.html && test -s docs/facilitator.html
+          echo "docs/ is self-contained"
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
