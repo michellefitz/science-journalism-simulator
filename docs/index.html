@@ -54,15 +54,18 @@
 
 *{ box-sizing:border-box; }
 
+/* Pinned rather than merely overflow-hidden: on iOS the document itself can
+   be left scrolled after the keyboard closes, which is what leaves a strip of
+   backdrop along the bottom and shunts the whole app upward. */
 body{
   margin:0;
+  position:fixed; inset:0;
   background:#DFE1E6;
   color:var(--ink);
   font-family:var(--sans);
   font-size:var(--t-body);
   -webkit-font-smoothing:antialiased;
   -webkit-text-size-adjust:100%;
-  min-height:100vh;
   overflow:hidden;
 }
 
@@ -70,7 +73,9 @@ body{
 
 .stage{
   position:relative; z-index:1;
-  height:100vh; height:100dvh;
+  /* --vh is written from visualViewport, the only measurement that tracks the
+     software keyboard on iOS. dvh is the fallback where that is unavailable. */
+  height:100vh; height:100dvh; height:var(--vh, 100dvh);
   display:flex; align-items:center; justify-content:center;
 }
 
@@ -359,22 +364,6 @@ body{
 }
 .opt[disabled]{ opacity:.45; pointer-events:none; }
 
-/* ---------- toasts ---------- */
-.toasts{
-  position:absolute; top:64px; left:0; right:0; z-index:15;
-  display:flex; flex-direction:column; align-items:center; gap:6px;
-  pointer-events:none;
-}
-.toast{
-  font-family:var(--mono); font-size:var(--t-meta); font-weight:700;
-  letter-spacing:.1em; padding:6px 13px; border-radius:20px;
-  background:var(--ink); color:#fff;
-  animation:tfade 2.6s ease both;
-}
-.toast.up{ background:var(--good); }
-.toast.down{ background:var(--urgent); }
-@keyframes tfade{
-  0%{opacity:0; transform:translateY(-6px);}
   12%,72%{opacity:1; transform:none;}
   100%{opacity:0; transform:translateY(-4px);}
 }
@@ -607,8 +596,6 @@ body{
       <div class="seg"><i></i></div>
       <div class="seg"><i></i></div>
     </div>
-
-    <div class="toasts" id="toasts"></div>
 
     <div class="thread" id="thread" role="log" aria-live="polite" aria-label="Incoming messages"></div>
 
@@ -1418,18 +1405,6 @@ function pulseRail(delta){
     setTimeout(()=> seg.classList.remove("up","down"), 1600);
   });
 }
-function toast(delta){
-  const host = $("toasts");
-  AXES.forEach(a=>{
-    const v = delta[a.k];
-    if(!v) return;
-    const t = document.createElement("div");
-    t.className = "toast " + (v>0 ? "up":"down");
-    t.textContent = (v>0 ? "▲ " : "▼ ") + a.n;
-    host.appendChild(t);
-    setTimeout(()=> t.remove(), 2700);
-  });
-}
 
 /* ---- rounds ---- */
 async function runRound(){
@@ -1544,7 +1519,6 @@ async function choose(r, opt, timedOut){
 
   await playInjects(opt.out || []);
   pulseRail(opt.s);
-  toast(opt.s);
 
   await wait(1100);
   state.i++;
@@ -1643,6 +1617,26 @@ function finish(){
   });
   $("againBtn").addEventListener("click", ()=> location.reload());
 }
+
+/* ---- viewport ----
+   The software keyboard changes the visual viewport without changing the
+   layout viewport, so a 100dvh app is left the wrong height once it closes.
+   Track the real height and reset any scroll the browser applied. */
+function fitViewport(){
+  const vv = window.visualViewport;
+  const h = vv ? vv.height : window.innerHeight;
+  document.documentElement.style.setProperty("--vh", h + "px");
+  if(window.scrollY !== 0) window.scrollTo(0, 0);
+}
+if(window.visualViewport){
+  visualViewport.addEventListener("resize", fitViewport);
+  visualViewport.addEventListener("scroll", fitViewport);
+}
+window.addEventListener("resize", fitViewport);
+window.addEventListener("orientationchange", ()=> setTimeout(fitViewport, 120));
+// a blurred field is the moment the keyboard retracts
+document.addEventListener("focusout", ()=> setTimeout(fitViewport, 60), true);
+fitViewport();
 
 /* ---- lobby ---- */
 $("openAlert").addEventListener("click", ()=>{
