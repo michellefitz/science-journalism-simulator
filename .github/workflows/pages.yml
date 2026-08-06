@@ -51,7 +51,18 @@ jobs:
           done
           echo "docs/ is self-contained and mobile-ready"
 
-      - name: Ensure a Pages site exists
+      - name: Is the committed docs/ in sync with the sources?
+        run: |
+          # Under "Deploy from a branch" mode GitHub serves docs/ straight from
+          # the repo, so stale built files would silently ship the wrong site.
+          if ! git diff --quiet -- docs/; then
+            echo "::error::docs/ is out of date. Run 'node build.mjs' and commit the result."
+            git diff --stat -- docs/
+            exit 1
+          fi
+          echo "docs/ matches the sources"
+
+      - name: How is Pages configured?
         id: probe
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -59,7 +70,20 @@ jobs:
           api="https://api.github.com/repos/${{ github.repository }}/pages"
           hdr=(-H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json")
 
-          code=$(curl -s -o /dev/null -w '%{http_code}' "${hdr[@]}" "$api")
+          code=$(curl -s -o /tmp/pages.json -w '%{http_code}' "${hdr[@]}" "$api")
+
+          # build_type "workflow" means Pages publishes what this workflow
+          # uploads. "legacy" means it serves docs/ from the branch itself, in
+          # which case deploying from here is not just unnecessary, it would
+          # fail. Branch mode uses an entirely separate pipeline to the Actions
+          # deployment queue, which is why it is the reliable fallback.
+          build_type=$(python3 -c "import json;print(json.load(open('/tmp/pages.json')).get('build_type',''))" 2>/dev/null || echo "")
+          echo "build_type=$build_type"
+          if [ "$build_type" != "workflow" ] && [ "$code" = "200" ]; then
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "::notice title=Serving docs/ from the branch::Pages is in branch mode, so this workflow only builds and verifies. GitHub publishes docs/ directly."
+            exit 0
+          fi
 
           # Enabling Pages is normally a manual settings change, which is
           # awkward for anyone without a desktop to hand - the GitHub mobile
