@@ -63,8 +63,15 @@ jobs:
 
           # Enabling Pages is normally a manual settings change, which is
           # awkward for anyone without a desktop to hand - the GitHub mobile
-          # app has no repository settings at all. A token with pages:write
-          # can create the site itself, so try that before giving up.
+          # app has no repository settings at all.
+          #
+          # Creating the site from here does not work: the default
+          # GITHUB_TOKEN gets 403 "Resource not accessible by integration"
+          # on POST /pages even with pages:write, because site creation
+          # needs repo administration rights the token cannot hold. The
+          # attempt is left in because it costs one call, only fires while
+          # there is no site, and would start working under a PAT with
+          # admin rights. It is not a substitute for the settings toggle.
           if [ "$code" != "200" ]; then
             echo "No Pages site yet (HTTP $code). Attempting to create one."
             create=$(curl -s -o /tmp/pages_create.json -w '%{http_code}' -X POST "${hdr[@]}" \
