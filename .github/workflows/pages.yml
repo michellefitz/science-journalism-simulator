@@ -106,3 +106,10 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+        with:
+          # The action defaults to giving up after 10 minutes. GitHub's Pages
+          # queue can sit in deployment_queued for longer than that when a
+          # previous deployment is wedged - which is exactly what happens
+          # right after Pages is first switched on. Waiting longer costs
+          # nothing and saves a manual re-run.
+          timeout: 1800000
