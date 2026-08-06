@@ -291,9 +291,12 @@ body{
    the only flexible item; the sheet takes what it needs up to max-height
    and the options scroll inside it. */
 #sheetHost{
-  flex:0 0 auto; min-height:0; max-height:66%;
+  flex:0 0 auto; min-height:0; max-height:72%;
   display:flex; flex-direction:column;
 }
+/* Collapsed, the sheet must claim no more room than its handle, so the
+   thread gets the screen back. */
+#sheetHost:has(.sheet[data-open="false"]){ max-height:none; }
 .sheet{
   flex:1 1 auto; min-height:0;
   border-top:1px solid var(--line);
@@ -301,18 +304,55 @@ body{
   display:flex; flex-direction:column;
   animation:sheetup .45s cubic-bezier(.2,.8,.25,1) both;
 }
-.sheet .qhead{ flex:0 0 auto; }
 @keyframes sheetup{ from{ transform:translateY(100%); } to{ transform:none; } }
 
-.sheet .qhead{ padding:11px 14px 9px; border-bottom:1px solid var(--line-soft); }
-.sheet .qlabel{
-  font-family:var(--mono); font-size:9.5px; letter-spacing:.18em;
-  color:var(--signal); margin-bottom:6px;
-  display:flex; justify-content:space-between; align-items:center;
+/* The handle is always visible; the body collapses behind it so the thread
+   stays readable. The sheet opens on request, not on arrival. */
+.handle{
+  flex:0 0 auto; width:100%;
+  background:none; border:none; color:inherit; font-family:inherit;
+  padding:10px 14px 11px; cursor:pointer; text-align:left;
+  display:flex; flex-direction:column; gap:8px;
 }
-.sheet .qlabel .cd{ color:var(--dim); font-variant-numeric:tabular-nums; letter-spacing:.1em; }
-.sheet .qlabel .cd.hot{ color:var(--flash); }
-.sheet .q{ font-size:14.5px; line-height:1.5; font-weight:500; text-wrap:balance; }
+.handle:focus-visible{ outline:2px solid var(--you); outline-offset:-2px; }
+.hrow{
+  display:flex; justify-content:space-between; align-items:center;
+  font-family:var(--mono); font-size:9.5px; letter-spacing:.18em;
+  color:var(--signal);
+}
+.hrow .cd{ color:var(--dim); font-variant-numeric:tabular-nums; letter-spacing:.1em; }
+.hrow .cd.hot{ color:var(--flash); }
+.hcta{
+  display:flex; justify-content:space-between; align-items:center;
+  border:1px solid var(--signal); border-radius:4px;
+  padding:10px 12px;
+  font-family:var(--mono); font-size:11.5px; font-weight:700; letter-spacing:.12em;
+  color:var(--signal); background:rgba(255,176,32,.07);
+  transition:background .16s;
+}
+.handle:hover .hcta{ background:rgba(255,176,32,.15); }
+.hcta .chev{ transition:transform .25s ease; }
+
+/* open state */
+.sheet[data-open="true"] .hcta{
+  border-color:var(--line); color:var(--dim); background:transparent;
+  font-weight:500;
+}
+.sheet[data-open="true"] .hcta .chev{ transform:rotate(180deg); }
+.sheet[data-open="false"] .sbody{ display:none; }
+
+/* the unanswered decision breathes so it cannot be missed while collapsed */
+@keyframes waiting{
+  0%,100%{ box-shadow:0 0 0 0 rgba(255,176,32,0); }
+  50%{ box-shadow:0 0 0 3px rgba(255,176,32,.13); }
+}
+.sheet[data-open="false"] .hcta{ animation:waiting 2.4s ease-in-out infinite; }
+
+.sbody{ flex:1 1 auto; min-height:0; display:flex; flex-direction:column; }
+.sheet .q{
+  flex:0 0 auto; padding:2px 14px 11px;
+  font-size:14.5px; line-height:1.5; font-weight:500; text-wrap:balance;
+}
 
 .fuse{ height:2px; background:var(--line); position:relative; overflow:hidden; flex:0 0 auto; }
 .fuse i{
@@ -1452,23 +1492,39 @@ function showSheet(r){
      </button>`).join("");
 
   sheetHost.innerHTML =
-    `<div class="sheet">
-       <div class="qhead">
-         <div class="qlabel">
+    `<div class="sheet" data-open="false" id="sheet">
+       <button class="handle" id="sheetToggle" aria-expanded="false" aria-controls="sbody">
+         <span class="hrow">
            <span>DECISION ${r.id} / 10 · ${esc(r.prompt)}</span>
            <span class="cd" id="cd">${state.untimed ? "—" : r.secs+"s"}</span>
-         </div>
-         <div class="q">${esc(r.q)}</div>
-       </div>
+         </span>
+         <span class="hcta"><span id="ctaLabel">DECIDE WHAT TO DO</span><span class="chev">▲</span></span>
+       </button>
        <div class="fuse"><i id="fuse"></i></div>
-       <div class="opts">${opts}</div>
+       <div class="sbody" id="sbody">
+         <div class="q">${esc(r.q)}</div>
+         <div class="opts">${opts}</div>
+       </div>
      </div>`;
 
   sheetHost.querySelectorAll(".opt").forEach(b=>{
     b.addEventListener("click", ()=> choose(r, r.options[+b.dataset.ix]));
   });
+  $("sheetToggle").addEventListener("click", ()=> toggleSheet());
 
   if(!state.untimed) startTimer(r);
+}
+
+/* Open on request rather than on arrival, so the injects stay readable.
+   Passing a boolean forces a state; omitting it flips. */
+function toggleSheet(force){
+  const sheet = $("sheet");
+  if(!sheet) return;
+  const open = force === undefined ? sheet.dataset.open !== "true" : !!force;
+  sheet.dataset.open = open ? "true" : "false";
+  $("sheetToggle").setAttribute("aria-expanded", open ? "true" : "false");
+  $("ctaLabel").textContent = open ? "HIDE AND RE-READ" : "DECIDE WHAT TO DO";
+  if(!open) scrollDown();
 }
 
 function startTimer(r){
@@ -1485,7 +1541,12 @@ function startTimer(r){
     const left = Math.max(0, Math.ceil((state.deadline - Date.now())/1000));
     if(cd) {
       cd.textContent = left + "s";
-      if(left <= 10){ cd.classList.add("hot"); fuse.classList.add("hot"); }
+      if(left <= 10){
+        cd.classList.add("hot"); fuse.classList.add("hot");
+        // Last call. Reading time is over; make sure the options are in front
+        // of them rather than letting the clock expire on a hidden sheet.
+        toggleSheet(true);
+      }
     }
     if(left <= 0){
       clearInterval(state.timer);
@@ -1629,10 +1690,22 @@ $("startBtn").addEventListener("click", ()=>{
 });
 $("playerName").addEventListener("keydown", e=>{ if(e.key === "Enter") $("startBtn").click(); });
 
-/* keyboard: A-D select */
+/* keyboard: A-D select once open, Enter/Escape toggle the sheet */
 document.addEventListener("keydown", e=>{
+  const sheet = $("sheet");
+  if(!sheet) return;
+  const open = sheet.dataset.open === "true";
+
+  if(e.key === "Escape"){ toggleSheet(false); return; }
+  if(e.key === "Enter" || e.key === " "){
+    if(!open && document.activeElement?.id !== "sheetToggle"){ e.preventDefault(); toggleSheet(true); }
+    return;
+  }
+
   const k = e.key.toUpperCase();
   if(!"ABCD".includes(k)) return;
+  // While collapsed a letter reveals the options rather than blind-picking one.
+  if(!open){ toggleSheet(true); return; }
   const btns = sheetHost.querySelectorAll(".opt");
   const ix = "ABCD".indexOf(k);
   if(btns[ix]) btns[ix].click();
