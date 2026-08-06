@@ -1,0 +1,476 @@
+<title>MONSOON — Facilitator's Run of Show</title>
+
+<style>
+/* ============================================================
+   Facilitator's guide. Utilitarian document treatment — this one
+   gets read in daylight and printed, so unlike the simulation it
+   is fully theme-aware.
+   ============================================================ */
+
+:root{
+  --paper:#FBFAF7;
+  --paper-2:#F2F0EA;
+  --rule:#DEDAD0;
+  --rule-soft:#E9E5DC;
+  --ink:#1A1D22;
+  --ink-2:#4C525C;
+  --ink-3:#7B818C;
+  --signal:#B4700A;
+  --signal-bg:#FBF2E0;
+  --flag:#B33021;
+  --good:#3D7A4E;
+
+  --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, "Times New Roman", serif;
+}
+
+@media (prefers-color-scheme: dark){
+  :root{
+    --paper:#12151A; --paper-2:#1A1E25; --rule:#2C323C; --rule-soft:#232830;
+    --ink:#E4E8EE; --ink-2:#A8B0BC; --ink-3:#767E8B;
+    --signal:#F0A93C; --signal-bg:#241C0D;
+    --flag:#F07264; --good:#7BC28E;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#12151A; --paper-2:#1A1E25; --rule:#2C323C; --rule-soft:#232830;
+  --ink:#E4E8EE; --ink-2:#A8B0BC; --ink-3:#767E8B;
+  --signal:#F0A93C; --signal-bg:#241C0D;
+  --flag:#F07264; --good:#7BC28E;
+}
+:root[data-theme="light"]{
+  --paper:#FBFAF7; --paper-2:#F2F0EA; --rule:#DEDAD0; --rule-soft:#E9E5DC;
+  --ink:#1A1D22; --ink-2:#4C525C; --ink-3:#7B818C;
+  --signal:#B4700A; --signal-bg:#FBF2E0;
+  --flag:#B33021; --good:#3D7A4E;
+}
+
+*{box-sizing:border-box;}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:var(--serif);
+  -webkit-font-smoothing:antialiased;
+  line-height:1.65;
+}
+.wrap{ max-width:760px; margin:0 auto; padding:56px 28px 100px; }
+
+/* masthead */
+.masthead{ border-bottom:2px solid var(--ink); padding-bottom:22px; margin-bottom:34px; }
+.eyebrow{
+  font-family:var(--mono); font-size:10.5px; letter-spacing:.2em;
+  color:var(--signal); text-transform:uppercase; margin-bottom:14px;
+}
+h1{
+  font-family:var(--mono); font-size:clamp(38px,8vw,60px);
+  line-height:.94; font-weight:700; letter-spacing:-.02em;
+  margin:0 0 12px; text-wrap:balance;
+}
+.standfirst{
+  font-size:17px; line-height:1.6; color:var(--ink-2);
+  max-width:60ch; margin:0;
+}
+.meta{
+  margin-top:18px; display:flex; flex-wrap:wrap; gap:8px 20px;
+  font-family:var(--mono); font-size:11px; letter-spacing:.06em; color:var(--ink-3);
+}
+.meta b{ color:var(--ink-2); font-weight:600; }
+
+/* launch */
+.launch{
+  margin:28px 0 0; padding:18px 20px;
+  background:var(--signal-bg); border:1px solid var(--signal);
+  border-radius:4px;
+}
+.launch .lbl{
+  font-family:var(--mono); font-size:10px; letter-spacing:.18em;
+  color:var(--signal); margin-bottom:8px;
+}
+.launch a{
+  font-family:var(--mono); font-size:15px; color:var(--ink);
+  word-break:break-all; font-weight:600;
+}
+.launch p{ margin:9px 0 0; font-size:13.5px; color:var(--ink-2); font-family:var(--sans); }
+
+h2{
+  font-family:var(--mono); font-size:13px; letter-spacing:.16em;
+  text-transform:uppercase; font-weight:700;
+  margin:52px 0 4px; padding-bottom:9px;
+  border-bottom:1px solid var(--rule);
+  color:var(--ink);
+}
+h2 .num{ color:var(--signal); margin-right:10px; }
+h3{
+  font-family:var(--sans); font-size:16px; font-weight:650;
+  margin:28px 0 8px; color:var(--ink); text-wrap:balance;
+}
+p{ margin:0 0 14px; max-width:66ch; }
+p.lede{ font-size:16.5px; color:var(--ink-2); }
+strong{ font-weight:650; }
+em.term{ font-style:normal; font-family:var(--mono); font-size:.9em; color:var(--signal); }
+
+ul,ol{ max-width:66ch; padding-left:22px; margin:0 0 16px; }
+li{ margin-bottom:8px; }
+
+/* run of show table */
+.rundown{ margin:18px 0 8px; border-top:1px solid var(--rule); }
+.slot{
+  display:grid; grid-template-columns:92px 1fr; gap:0 18px;
+  padding:14px 0; border-bottom:1px solid var(--rule-soft);
+  align-items:start;
+}
+.slot .t{
+  font-family:var(--mono); font-size:12px; font-weight:600;
+  color:var(--signal); letter-spacing:.04em; padding-top:2px;
+  font-variant-numeric:tabular-nums;
+}
+.slot .c h4{
+  font-family:var(--sans); font-size:14.5px; font-weight:650;
+  margin:0 0 5px; color:var(--ink);
+}
+.slot .c p{ margin:0; font-size:14px; color:var(--ink-2); }
+.slot .c p + p{ margin-top:7px; }
+.slot .say{
+  margin-top:8px; padding-left:13px; border-left:2px solid var(--signal);
+  font-size:13.5px; color:var(--ink-2); font-style:italic;
+}
+
+/* decision matrix */
+.tablewrap{ overflow-x:auto; margin:16px 0 8px; }
+table{ border-collapse:collapse; width:100%; min-width:600px; font-family:var(--sans); }
+th,td{ text-align:left; padding:11px 12px; border-bottom:1px solid var(--rule-soft); vertical-align:top; font-size:13.5px; }
+th{
+  font-family:var(--mono); font-size:10px; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--ink-3); font-weight:600;
+  border-bottom:1px solid var(--rule); white-space:nowrap;
+}
+td:first-child{ font-family:var(--mono); font-size:12px; color:var(--signal); white-space:nowrap; font-weight:600; }
+td b{ font-weight:650; }
+
+/* callouts */
+.box{
+  border:1px solid var(--rule); background:var(--paper-2);
+  border-radius:4px; padding:16px 18px; margin:20px 0;
+}
+.box.flag{ border-left:3px solid var(--flag); }
+.box.good{ border-left:3px solid var(--good); }
+.box.key{ border-left:3px solid var(--signal); }
+.box .bl{
+  font-family:var(--mono); font-size:10px; letter-spacing:.16em;
+  text-transform:uppercase; margin-bottom:9px; color:var(--ink-3);
+}
+.box.flag .bl{ color:var(--flag); }
+.box.good .bl{ color:var(--good); }
+.box.key .bl{ color:var(--signal); }
+.box p:last-child{ margin-bottom:0; }
+.box p{ font-size:14.5px; }
+
+/* archetype grid */
+.arches{ display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:12px; margin:18px 0; }
+.arch{
+  border:1px solid var(--rule); border-radius:4px; padding:13px 14px;
+  background:var(--paper-2);
+}
+.arch .an{
+  font-family:var(--mono); font-size:12.5px; font-weight:700;
+  letter-spacing:.06em; margin-bottom:3px;
+}
+.arch .ax{
+  font-family:var(--mono); font-size:10px; color:var(--ink-3);
+  letter-spacing:.08em; margin-bottom:7px;
+}
+.arch .ad{ font-size:13px; line-height:1.55; color:var(--ink-2); font-family:var(--sans); }
+
+/* question list */
+.qs{ counter-reset:q; list-style:none; padding:0; }
+.qs li{
+  counter-increment:q; position:relative;
+  padding-left:34px; margin-bottom:14px; font-size:15px;
+}
+.qs li::before{
+  content:counter(q); position:absolute; left:0; top:1px;
+  font-family:var(--mono); font-size:11px; font-weight:700;
+  color:var(--signal); border:1px solid var(--rule);
+  border-radius:3px; width:22px; height:22px;
+  display:grid; place-items:center;
+}
+
+footer{
+  margin-top:64px; padding-top:22px; border-top:1px solid var(--rule);
+  font-family:var(--mono); font-size:11px; line-height:1.8; color:var(--ink-3);
+}
+
+@media print{
+  body{ background:#fff; color:#000; }
+  .wrap{ max-width:none; padding:0; }
+  h2{ break-after:avoid; }
+  .slot,.box,.arch{ break-inside:avoid; }
+}
+@media (prefers-reduced-motion: reduce){ *{ animation:none !important; transition:none !important; } }
+</style>
+
+<div class="wrap">
+
+<div class="masthead">
+  <div class="eyebrow">Facilitator's Run of Show</div>
+  <h1>MONSOON</h1>
+  <p class="standfirst">A live crisis simulation for science journalists. Participants run a global science desk through four hours of a story that is half true — and find out at the end which half.</p>
+  <div class="meta">
+    <span><b>90 min</b> full workshop</span>
+    <span><b>45 min</b> compressed</span>
+    <span><b>10</b> decisions</span>
+    <span><b>8–200</b> participants</span>
+    <span>solo or table teams</span>
+  </div>
+</div>
+
+<div class="launch">
+  <div class="lbl">Participant link — put this on a slide and a QR code</div>
+  <a href="__SIM_URL__">__SIM_URL__</a>
+  <p>Works on any phone browser. Nothing to install, no login, no data leaves the device. Participants play on their own phones while seated at tables.</p>
+</div>
+
+<h2><span class="num">01</span>What this is</h2>
+
+<p class="lede">A preprint alleges that a private geoengineering venture caused the worst South Asian monsoon failure in forty years. It has not been peer reviewed. Within four hours it is a head-of-state problem.</p>
+
+<p>Each participant plays the <strong>deputy digital editor</strong> of <em class="term">The Meridian</em>, a fictional global science publication. They are the only editor awake. They control the alerts, the homepage and the social accounts. The story arrives on their phone as a call at 02:47 and escalates for two days.</p>
+
+<p>Ten decisions, each on a countdown. If the clock runs out, the story moves without them — and that counts as a decision, because it is one.</p>
+
+<div class="box key">
+  <div class="bl">The design principle worth knowing before you run it</div>
+  <p>Everyone in the room gets the <strong>same ten injects in the same order</strong>. Only the responses diverge. This is deliberate and it is what makes the debrief work: two people who chose differently at Decision 7 can argue about it, because they were standing in exactly the same place when they chose. A branching story would give you a hundred private experiences and nothing to compare.</p>
+</div>
+
+<h3>What it actually teaches</h3>
+
+<p>The simulation is built around one structural trap, and everything else serves it: <strong>the moral story and the factual story come apart at Decision 8.</strong> The company really did something reckless and unauthorised. It really did not cause the monsoon failure. Both are true, and almost every format available to a journalist — a headline, an alert, a broadcast clip, a correction — can only carry one of them.</p>
+
+<p>Participants who have spent seven rounds building a villain now have to publish a finding that partially exonerates him without abandoning the part that was real. That is the moment the workshop is for.</p>
+
+<h2><span class="num">02</span>What is actually true</h2>
+
+<p>You will need this before you run the room. <strong>Do not reveal it in the framing</strong> — the simulation reveals it at Decision 8, and the surprise is doing real work.</p>
+
+<div class="tablewrap">
+<table>
+  <thead><tr><th>Claim</th><th>Status in the fiction</th><th>Why it's there</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>Unauthorised flights</td>
+      <td><b>True and admitted.</b> Kestrel Climate ran stratospheric sulfate injections with no authorisation from anyone.</td>
+      <td>Gives the outrage a legitimate basis so the later correction genuinely hurts.</td>
+    </tr>
+    <tr>
+      <td>Monsoon failure</td>
+      <td><b>True.</b> 38% below normal rainfall, worst since 1987, ~190 million people affected.</td>
+      <td>Real stakes. Keeps this from being an abstract ethics puzzle.</td>
+    </tr>
+    <tr>
+      <td>Causal link between them</td>
+      <td><b>False, but not fraudulent.</b> A thin single-season attribution, inflated by a university press release into a claim the paper never made.</td>
+      <td>The most common real failure mode in science journalism — the release is louder than the paper.</td>
+    </tr>
+    <tr>
+      <td>Actual cause</td>
+      <td>A record Indian Ocean Dipole event. Kestrel's dispersal volumes were ~1/400th of a detectable threshold.</td>
+      <td>Attribution science is genuinely hard; the correct answer was available to anyone who opened the PDF.</td>
+    </tr>
+    <tr>
+      <td>Governance question</td>
+      <td><b>Entirely unresolved.</b> No legal instrument existed to stop the flights, and none of the reporting settles it.</td>
+      <td>The story that was always there, and that the causal claim buried.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<h2><span class="num">03</span>Run of show — 90 minutes</h2>
+
+<div class="rundown">
+  <div class="slot">
+    <div class="t">0:00–0:06</div>
+    <div class="c">
+      <h4>Frame it, then get out of the way</h4>
+      <p>Do not explain the scenario. Do not explain the scoring. Tell them three things only: they are the only editor awake, the clock does not stop, and there is no undo.</p>
+      <div class="say">"In a moment your phone is going to ring. You're the deputy digital editor of a global science title and you're the only one awake. Ten decisions. Each one is on a clock. If the clock runs out, the story moves without you — and I promise you that counts. Don't discuss it with your neighbour yet."</div>
+    </div>
+  </div>
+  <div class="slot">
+    <div class="t">0:06–0:10</div>
+    <div class="c">
+      <h4>Get them in</h4>
+      <p>QR code on screen. They enter a name or table number — this is the only thing you'll use to find them in the debrief, so ask them to use something you can read aloud.</p>
+      <p>Leave <strong>timed mode on</strong> for the full workshop. Untimed is for the compressed version and for table teams that need to argue.</p>
+    </div>
+  </div>
+  <div class="slot">
+    <div class="t">0:10–0:35</div>
+    <div class="c">
+      <h4>Play</h4>
+      <p>Roughly 20–25 minutes timed. Stay quiet. The temptation to narrate is strong and it wrecks the pressure.</p>
+      <p>Watch the room instead — you want to notice who is laughing at Decision 3 (the headline round), who goes very still at Decision 5, and who audibly reacts at Decision 8. Those are your debrief volunteers.</p>
+    </div>
+  </div>
+  <div class="slot">
+    <div class="t">0:35–0:45</div>
+    <div class="c">
+      <h4>The archetype huddle</h4>
+      <p>Everyone gets an archetype on their debrief screen. Call them out one at a time and have people stand or raise hands. Then group the room physically by archetype for five minutes with one instruction: <em>find the decision where you think you earned this.</em></p>
+      <p>This is the highest-energy part of the session and it is worth protecting. People will discover that others made the opposite choice from identical information.</p>
+    </div>
+  </div>
+  <div class="slot">
+    <div class="t">0:45–1:08</div>
+    <div class="c">
+      <h4>Replay the three that matter</h4>
+      <p>Take Decisions <strong>3, 7 and 8</strong> as a whole room. Read the options aloud, get a show of hands for each, then ask the minority to defend themselves first. Detail is in section 04.</p>
+      <p>Do not attempt all ten. You will run out of time and the three below carry the whole lesson.</p>
+    </div>
+  </div>
+  <div class="slot">
+    <div class="t">1:08–1:20</div>
+    <div class="c">
+      <h4>The reveal</h4>
+      <p>Put section 02 on a slide. Most of the room already half-knows by now, but seeing the 1/400th figure next to "reckless and unauthorised" lands hard.</p>
+      <div class="say">"Everybody who corrected loudly was right. Everybody who kept the governance question alive was also right. Almost nobody did both — and the format is a big part of why."</div>
+    </div>
+  </div>
+  <div class="slot">
+    <div class="t">1:20–1:30</div>
+    <div class="c">
+      <h4>Close on what transfers</h4>
+      <p>Ask for three rules the room would actually adopt on Monday. Write them up. Section 06 has the ones that usually emerge if you need to prime the pump.</p>
+    </div>
+  </div>
+</div>
+
+<h3>Compressed — 45 minutes</h3>
+<p>Framing (4) → play in <strong>untimed</strong> mode at tables of three, one phone per table, arguing aloud (20) → archetype huddle (6) → Decision 8 only (10) → reveal and close (5). Table teams change the exercise: it becomes about how an editorial argument gets resolved under pressure, which is a different and equally useful lesson.</p>
+
+<h2><span class="num">04</span>The three decisions to replay</h2>
+
+<h3>Decision 3 — The headline</h3>
+<p>Four headlines, all defensible, all live in real newsrooms. This is the round where science journalists recognise themselves fastest, and it warms the room up.</p>
+<div class="tablewrap">
+<table>
+  <thead><tr><th>Option</th><th>What it models</th></tr></thead>
+  <tbody>
+    <tr><td>A · "Did a startup break the monsoon?"</td><td><b>The interrogative dodge.</b> A question mark is not a hedge — it plants a claim while keeping deniability. Readers resolve the question in the direction it leans.</td></tr>
+    <tr><td>B · "…Link Unproven"</td><td><b>Structurally honest and it underperforms.</b> Worth making the room sit with that trade rather than pretending it away.</td></tr>
+    <tr><td>C · "Scientists Link…"</td><td><b>The most load-bearing phrase in the trade.</b> Three authors become "scientists"; one weak regression becomes "link". Every word true, sentence false.</td></tr>
+    <tr><td>D · Two facts, deliberately unjoined</td><td><b>Rigorous and shareable.</b> Proves the two aren't always opposed — it just takes more drafts.</td></tr>
+  </tbody>
+</table>
+</div>
+<p><strong>Ask:</strong> "Who picked C? Be honest — how many of you have published a 'scientists link' headline this year?" Nearly every hand goes up eventually. That is the point.</p>
+
+<h3>Decision 7 — Your own record</h3>
+<p>The publication ran a glowing profile of the founder fourteen months ago. It is being screenshotted. One of the four options is <em class="term">quietly unpublish</em>.</p>
+<div class="box flag">
+  <div class="bl">The trap</div>
+  <p>Unpublishing is the most realistic wrong answer in the simulation, and in the fiction it converts an old embarrassment into a live scandal within minutes. If anyone in your room chose it, get them to talk — they will usually have a completely coherent reason, which is exactly why it happens in real newsrooms.</p>
+</div>
+<p><strong>Ask:</strong> "What is your outlet's actual, written policy on unpublishing? Does one exist?" In most rooms, fewer than a quarter can answer. That silence is a better argument than anything you can say.</p>
+
+<h3>Decision 8 — The divergence</h3>
+<p>The whole workshop points here. A fourteen-institution analysis clears the company of causing the monsoon while leaving the recklessness untouched.</p>
+<div class="tablewrap">
+<table>
+  <thead><tr><th>Option</th><th>What it models</th></tr></thead>
+  <tbody>
+    <tr><td>A · Lead on the exoneration</td><td>Accurate and structurally misleading. Hands the frame to the party with the biggest press office.</td></tr>
+    <tr><td>B · Hold both in the lead</td><td>The thesis. Hardest sentence to write, only honest one available.</td></tr>
+    <tr><td>C · Pivot to governance</td><td><b>The sophisticated dodge.</b> Watch for this one — it is the option smart rooms pick, and it is how you avoid saying you got it wrong.</td></tr>
+    <tr><td>D · Wait for peer review</td><td><b>Asymmetric scepticism.</b> Rushed the 3-author preprint in four hours; holds the 14-institution assessment for review. A standard applied only to evidence that contradicts you is not a standard.</td></tr>
+  </tbody>
+</table>
+</div>
+<div class="box good">
+  <div class="bl">The question that makes the session</div>
+  <p><strong>"Write the first sentence. Out loud, right now, both findings in it, neither one subordinate to the other."</strong></p>
+  <p>Give them ninety seconds and take three attempts from the floor. The room discovers by doing rather than by being told that the sentence is genuinely hard to construct — and that the difficulty is a property of the format, not of their skill. This is the single most valuable ten minutes in the workshop.</p>
+</div>
+
+<h2><span class="num">05</span>Assessing who navigated it well</h2>
+
+<p>Four axes, scored across all ten decisions. Participants <strong>cannot see their numbers while playing</strong> — only a brief directional pulse. This is deliberate: a visible score turns the exercise into optimisation, and optimising is the opposite of the judgement being taught.</p>
+
+<div class="tablewrap">
+<table>
+  <thead><tr><th>Axis</th><th>Measures</th><th>Its failure mode</th></tr></thead>
+  <tbody>
+    <tr><td>RIGOUR</td><td>Proportion between claim and evidence</td><td>Correct and irrelevant</td></tr>
+    <tr><td>TEMPO</td><td>Meeting the moment</td><td>First, loud, wrong</td></tr>
+    <tr><td>TRUST</td><td>Standing with audience, sources, newsroom</td><td>Popular and pliable</td></tr>
+    <tr><td>NERVE</td><td>Independence under pressure</td><td>Never wrong, never listens</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="box key">
+  <div class="bl">Say this out loud in the debrief</div>
+  <p>Rigour and tempo genuinely pull against each other, and <strong>no route through the simulation maxes all four</strong>. A high score is not a right answer, it is a coherent set of trades. The decision log on each participant's screen — with a short note on what each choice modelled — is the actual teaching material. The archetype is just the conversation starter.</p>
+</div>
+
+<h3>The archetypes</h3>
+<p>Assigned by the <em>shape</em> of the profile, not the total. Use them to group the room.</p>
+
+<div class="arches">
+  <div class="arch"><div class="an">THE EDITOR</div><div class="ax">balanced, strong</div><div class="ad">Held four competing things under a clock and paid on every axis. Uncommon.</div></div>
+  <div class="arch"><div class="an">THE WIRE</div><div class="ax">tempo ↑ · rigour ↓</div><div class="ad">First, loud, repeatedly wrong in public.</div></div>
+  <div class="arch"><div class="an">THE VAULT</div><div class="ax">rigour ↑ · tempo ↓</div><div class="ad">Careful, correct, lapped. Left a vacuum others filled.</div></div>
+  <div class="arch"><div class="an">THE FORTRESS</div><div class="ax">nerve ↑ · trust ↓</div><div class="ad">Never folded, never conceded. Independence hardened into imperviousness.</div></div>
+  <div class="arch"><div class="an">THE WEATHERVANE</div><div class="ax">trust ↑ · nerve ↓</div><div class="ad">Moved toward whoever pressured last. Each move defensible; the sequence isn't.</div></div>
+  <div class="arch"><div class="an">THE CANNON</div><div class="ax">tempo ↑ · trust ↓</div><div class="ad">Met every moment, spent every relationship doing it.</div></div>
+  <div class="arch"><div class="an">THE AUDITOR</div><div class="ax">rigour ↑ · trust ↓</div><div class="ad">Excellent with documents, careless with people.</div></div>
+  <div class="arch"><div class="an">THE DIPLOMAT</div><div class="ax">trust ↑ · rigour ↓</div><div class="ad">Kept the room by not saying hard things loudly enough.</div></div>
+  <div class="arch"><div class="an">THE CRUSADER</div><div class="ax">nerve ↑ · rigour ↓</div><div class="ad">Fearless, committed early, met Decision 8 with a position already taken.</div></div>
+  <div class="arch"><div class="an">THE CONDUIT</div><div class="ax">tempo ↑ · nerve ↓</div><div class="ad">Quick and permeable. Pressure passed straight through into the coverage.</div></div>
+  <div class="arch"><div class="an">THE STEWARD</div><div class="ax">trust ↑ · tempo ↓</div><div class="ad">Protected the relationships, arrived a beat late to everything.</div></div>
+  <div class="arch"><div class="an">THE HOLDOUT</div><div class="ax">nerve ↑ · tempo ↓</div><div class="ad">Refused the trades, refused them slowly.</div></div>
+  <div class="arch"><div class="an">THE TECHNICIAN</div><div class="ax">rigour ↑ · nerve ↓</div><div class="ad">Read the paper, found the gap, let others decide what it meant.</div></div>
+  <div class="arch"><div class="an">THE PASSENGER</div><div class="ax">flat, low</div><div class="ad">Reacted rather than decided. Usually several expired clocks.</div></div>
+</div>
+
+<h2><span class="num">06</span>Where it usually lands</h2>
+
+<p>Rules that tend to emerge from a room that has just played this. Let them arrive at these rather than presenting them — but have them ready.</p>
+
+<ol class="qs">
+  <li><strong>Read the paper, not the release.</strong> The gap between the two is where most science misreporting is manufactured, and it is visible in about nine minutes.</li>
+  <li><strong>Correct at the reach of the error.</strong> A footer note on the original reaches roughly 3% of the people who saw the mistake. If it went out as an alert, the correction goes out as an alert.</li>
+  <li><strong>"We're looking into it" is not a neutral holding position.</strong> An institution saying it is read as evidence there is something to look into.</li>
+  <li><strong>Never unpublish.</strong> Annotate, date, sign, leave it up. Deletion is always a bigger story than the thing deleted.</li>
+  <li><strong>Apply the same evidentiary standard to findings that flatter you.</strong> Round 8's option D is the one that catches careful people.</li>
+  <li><strong>A question mark is not a hedge.</strong></li>
+</ol>
+
+<h2><span class="num">07</span>Running it well</h2>
+
+<div class="box flag">
+  <div class="bl">Failure modes to watch for in the room</div>
+  <p><strong>Narrating over the play.</strong> The pressure is the pedagogy. Stay quiet for the full 25 minutes even when it feels like dead air.</p>
+  <p><strong>Letting it become a quiz.</strong> If people start asking "what was the right answer", redirect to "what did you trade". There is no route that maxes all four axes and saying so early prevents the room optimising.</p>
+  <p><strong>Skipping the huddle to save time.</strong> The physical grouping by archetype is what turns private results into an argument. Cut a replay round instead.</p>
+  <p><strong>Reaching Decision 8 with under fifteen minutes left.</strong> Everything before it is setup. Protect the time.</p>
+</div>
+
+<h3>If you have a hostile or expert room</h3>
+<p>Science journalists will spot that the preprint is thin almost immediately, and some will be smug about it. Good — let them, then ask what their outlet actually published during the last preprint cycle. The simulation is not testing whether they can identify a weak paper. It is testing what they do in the four hours when identifying it correctly still leaves them with a decision to make.</p>
+
+<h3>Variant: the plant</h3>
+<p>Borrowed from First Draft's newsroom simulations, which found that a group given a covert adversarial brief changed the whole exercise. Privately brief one participant per table to argue consistently for the fastest, highest-engagement option and see whether the table notices. Debrief that separately — it is a strong session on how competitive pressure enters a newsroom wearing the clothes of commercial realism.</p>
+
+<h3>Collecting results</h3>
+<p>Each debrief screen has a <strong>Copy result</strong> button producing one line — name, archetype, four scores. For a small room, have people read them out. For a large one, a shared doc or a Slack thread collects a hundred in about three minutes. Nothing is transmitted anywhere by the page itself; it holds no data and sets no cookies.</p>
+
+<footer>
+  MONSOON — a crisis simulation for science journalism.<br>
+  Entirely fictional. The Meridian, Kestrel Climate, Gullhaven University and every named individual are invented; any resemblance to a real publication, company or person is unintended.<br>
+  Scenario design draws on documented practice in newsroom crisis simulation and misinformation-inoculation game design — see the project README for sources.<br>
+  V1 — built to be argued with. Round text, scoring weights and the scenario spine are all meant to be edited before it meets a real room.
+</footer>
+
+</div>
