@@ -2,6 +2,10 @@ name: Deploy to GitHub Pages
 
 # Rebuilds docs/ from the artifact sources and publishes it, so the live site
 # can never drift from index.html / facilitator.html.
+#
+# Until Pages is enabled on the repo (Settings -> Pages -> Source: GitHub
+# Actions) this still builds and validates, then stops with a notice rather
+# than failing - a red X on every push is not a useful thing to look at.
 
 on:
   push:
@@ -20,31 +24,59 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      pages_enabled: ${{ steps.probe.outputs.enabled }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+
       - name: Build standalone pages
         run: node build.mjs
+
       - name: Check the build is self-contained
         run: |
-          # A strict-CSP-free static host will happily load remote assets, but
-          # this project is meant to work offline in a conference room.
+          # The workshop has to run with the venue wifi down, so no page may
+          # reference a remote script, stylesheet or image.
           if grep -rEq '<(script|link|img)[^>]+(src|href)="https?://' docs/; then
-            echo "External asset reference found in docs/ - the workshop must run without network."
+            echo "::error::External asset reference in docs/ - the simulation must run offline."
             grep -rEn '<(script|link|img)[^>]+(src|href)="https?://' docs/
             exit 1
           fi
-          test -s docs/index.html && test -s docs/facilitator.html
-          echo "docs/ is self-contained"
+          # The viewport tag is the one that silently ruins it on phones.
+          for f in docs/index.html docs/facilitator.html; do
+            test -s "$f" || { echo "::error::$f missing or empty"; exit 1; }
+            grep -q '<meta name="viewport"' "$f" || { echo "::error::$f has no viewport meta"; exit 1; }
+          done
+          echo "docs/ is self-contained and mobile-ready"
+
+      - name: Is Pages enabled on this repo?
+        id: probe
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          code=$(curl -s -o /dev/null -w '%{http_code}' \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${{ github.repository }}/pages")
+          if [ "$code" = "200" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "::notice title=Pages not enabled yet::The site built and validated fine, there is just nowhere to publish it. Turn it on at Settings -> Pages -> Source: GitHub Actions, then re-run this workflow."
+          fi
+
       - uses: actions/configure-pages@v5
+        if: steps.probe.outputs.enabled == 'true'
       - uses: actions/upload-pages-artifact@v3
+        if: steps.probe.outputs.enabled == 'true'
         with:
           path: docs
 
   deploy:
     needs: build
+    if: needs.build.outputs.pages_enabled == 'true'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
