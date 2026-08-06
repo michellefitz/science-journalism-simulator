@@ -16,7 +16,7 @@
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 
 const PAGES = [
-  { src: 'index.html',       out: 'docs/index.html',       scheme: 'dark',
+  { src: 'index.html',       out: 'docs/index.html',       scheme: 'light',
     desc: 'A live crisis simulation for science journalists. Ten timed decisions running a global science desk through a story that is only half true.' },
   { src: 'facilitator.html', out: 'docs/facilitator.html', scheme: 'light dark',
     desc: 'Facilitator run of show for the MONSOON crisis simulation: timings, discussion questions, assessment rubric and the ground truth.' },
