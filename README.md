@@ -10,10 +10,12 @@ Ten decisions, each on a countdown, delivered as a phone thread — wire alerts,
 
 ## Files
 
-| File | What it is |
-|---|---|
-| `index.html` | The simulation. Self-contained — no build, no dependencies, no network calls. |
-| `facilitator.html` | The run-of-show guide: timings, discussion questions, assessment rubric, the ground truth. |
+| File | What it is | Published |
+|---|---|---|
+| `index.html` | The simulation. Self-contained — no build, no dependencies, no network calls. | [play it](https://claude.ai/code/artifact/51821151-0c67-465e-b21a-d7fe8229c533) |
+| `facilitator.html` | The run-of-show guide: timings, discussion questions, assessment rubric, the ground truth. | [read it](https://claude.ai/code/artifact/fc08bb69-87e5-4236-a5c9-2ae16688e837) |
+
+The participant link is the simulation. The facilitator guide is for whoever runs the room and contains the ending, so don't circulate it to participants beforehand.
 
 Both are single files that open directly in a browser (`open index.html`) and are also published as hosted pages. Nothing is transmitted anywhere; the pages hold no data and set no cookies.
 
