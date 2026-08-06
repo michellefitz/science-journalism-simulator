@@ -51,20 +51,35 @@ jobs:
           done
           echo "docs/ is self-contained and mobile-ready"
 
-      - name: Is Pages enabled on this repo?
+      - name: Ensure a Pages site exists
         id: probe
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          code=$(curl -s -o /dev/null -w '%{http_code}' \
-            -H "Authorization: Bearer $GH_TOKEN" \
-            -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/${{ github.repository }}/pages")
+          api="https://api.github.com/repos/${{ github.repository }}/pages"
+          hdr=(-H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json")
+
+          code=$(curl -s -o /dev/null -w '%{http_code}' "${hdr[@]}" "$api")
+
+          # Enabling Pages is normally a manual settings change, which is
+          # awkward for anyone without a desktop to hand - the GitHub mobile
+          # app has no repository settings at all. A token with pages:write
+          # can create the site itself, so try that before giving up.
+          if [ "$code" != "200" ]; then
+            echo "No Pages site yet (HTTP $code). Attempting to create one."
+            create=$(curl -s -o /tmp/pages_create.json -w '%{http_code}' -X POST "${hdr[@]}" \
+              "$api" -d '{"build_type":"workflow"}')
+            echo "create -> HTTP $create"
+            cat /tmp/pages_create.json || true
+            code=$(curl -s -o /dev/null -w '%{http_code}' "${hdr[@]}" "$api")
+          fi
+
           if [ "$code" = "200" ]; then
             echo "enabled=true" >> "$GITHUB_OUTPUT"
+            echo "Pages site is available; publishing."
           else
             echo "enabled=false" >> "$GITHUB_OUTPUT"
-            echo "::notice title=Pages not enabled yet::The site built and validated fine, there is just nowhere to publish it. Turn it on at Settings -> Pages -> Source: GitHub Actions, then re-run this workflow."
+            echo "::notice title=Pages not enabled::The site built and validated fine, there is just nowhere to publish it, and this token could not create the site. Enable it in a browser at Settings -> Pages -> Source: GitHub Actions, then re-run."
           fi
 
       - uses: actions/configure-pages@v5
