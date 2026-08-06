@@ -27,7 +27,9 @@ Both are single files that open directly in a browser (`open index.html`) and ar
 
 **Four axes, no winning route.** `RIGOUR · TEMPO · TRUST · NERVE`. Rigour and tempo genuinely pull against each other, and no path maxes all four. A strong result is a coherent set of trades, not a right answer.
 
-**Archetypes over rankings.** The debrief assigns an archetype by the *shape* of the profile (strongest axis against weakest), not the total — THE WIRE, THE VAULT, THE WEATHERVANE, and so on. These exist to group a room physically and start an argument, which a leaderboard would not.
+**Archetypes over rankings.** The debrief assigns an archetype by the *shape* of the profile (strongest axis against weakest), not the total — THE WIRE, THE VAULT, THE FORTRESS, and so on. These exist to group a room physically and start an argument, which a leaderboard would not.
+
+There are eleven, and all eleven are reachable — verified by directed search rather than assumed. Because scoring is additive and rounds are independent, greedily maximising a linear objective per round gives an exact optimum, so it is cheap to prove which profile shapes can actually be played. Three shapes that an earlier draft defined turned out to be impossible: every one was led by trust, and in this scenario every trust-building action also demands courage or evidence discipline. They were removed rather than papered over by distorting scores to fit the labels.
 
 **The central trap.** At Decision 8 the moral story and the factual story come apart: the company really did something reckless and unauthorised, and really did not cause the monsoon failure. Both are true, and almost every available format — headline, alert, broadcast clip, correction — can only carry one. Everything before Decision 8 is setup for it.
 

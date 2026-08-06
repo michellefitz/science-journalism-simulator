@@ -733,7 +733,7 @@ const ROUNDS = [
     },
     { k:"B", label:"Hold everything. Wake Marcus and a statistician.",
       detail:"Nothing publishes until somebody who can read the methods section has read the methods section.",
-      s:{rigor:+3, tempo:-2, trust:+1, nerve:+1}, flags:["held"],
+      s:{rigor:+3, tempo:-2, trust:+1, nerve:0}, flags:["held"],
       out:[{t:"you", text:"Hold. I'm waking Marcus. Nobody publishes until we've read the actual paper — not the release."},
            {t:"msg", who:"priya", lines:["Understood. For the record I think we get beaten on this."]},
            {t:"msg", who:"marcus", lines:["Reading now.","...their attribution rests on a 40-year reanalysis with the injection period as a dummy variable. One season. n of one, dressed up.","It's not fraud. It's just weak. And the press release is much louder than the paper."]}],
@@ -802,7 +802,7 @@ const ROUNDS = [
     },
     { k:"C", label:"Stay out. Let the Beacon own it.",
       detail:"We publish when we know. We do not publish because someone else did.",
-      s:{rigor:+2, tempo:-3, trust:0, nerve:+2}, flags:["abstained"],
+      s:{rigor:+1, tempo:-3, trust:+1, nerve:+2}, flags:["abstained"],
       out:[{t:"you", text:"We sit this one out until we know something."},
            {t:"msg", who:"tobi", lines:["Okay. I'll manage the group chat.","Just so you know what abstaining costs: the frame is being set right now, by them, without us in it. When we do publish we'll be arguing against a story everyone already believes."]}],
       note:"Defensible discipline with an under-discussed cost, and Tobi names it precisely: <b>silence does not keep you neutral, it keeps you absent while the frame hardens</b>. You will now be correcting rather than informing."
@@ -850,14 +850,14 @@ const ROUNDS = [
     },
     { k:"C", label:"“Scientists Link Geoengineering Venture to Monsoon Collapse”",
       detail:"Accurate — scientists did make that link. We're reporting the existence of the claim.",
-      s:{rigor:-2, tempo:+2, trust:-1, nerve:-1}, flags:["scientistssay"],
+      s:{rigor:-2, tempo:+2, trust:0, nerve:-1}, flags:["scientistssay"],
       out:[{t:"you", text:"C. We're accurately reporting that the claim was made."},
            {t:"msg", who:"marcus", lines:["'Scientists Link' is the most load-bearing phrase in our industry.","Three people at one university becomes 'scientists.' A weak regression becomes 'link.' Every word is true and the sentence is false."]}],
       note:"The most common construction in science journalism, and the most quietly corrosive. <b>Attributing a claim accurately is not the same as conveying its evidentiary weight.</b> “Scientists link” flattens three authors and one unreviewed regression into the voice of a field."
     },
     { k:"D", label:"“The Monsoon Failed. A Startup Was Spraying the Stratosphere. What We Actually Know.”",
       detail:"Lead with the two facts as separate facts. Make knowledge status the promise of the piece.",
-      s:{rigor:+3, tempo:+3, trust:+2, nerve:+1}, flags:["goodhead","strongframe"],
+      s:{rigor:+2, tempo:+3, trust:+2, nerve:+1}, flags:["goodhead","strongframe"],
       out:[{t:"you", text:"D. Two facts, deliberately not joined, and the piece promises to sort out which is which."},
            {t:"msg", who:"tobi", lines:["That'll actually travel. Curiosity gap without a false promise.","I can work with this. First honest headline tonight I haven't had to argue about."]}],
       note:"The rare headline that is both rigorous and shareable — it earns attention with a <b>real</b> curiosity gap rather than an implied causal claim, and the audience lead can defend it. Accuracy and reach are not always opposed; they just usually require more drafts."
@@ -890,7 +890,7 @@ const ROUNDS = [
   options:[
     { k:"A", label:"Go live. Correct the minister on air.",
       detail:"Say plainly: the flights are confirmed, the causal link is not, and no one should be legislating off a preprint.",
-      s:{rigor:+3, tempo:+2, trust:+2, nerve:+3}, flags:["correctedminister"],
+      s:{rigor:+1, tempo:+2, trust:+2, nerve:+3}, flags:["correctedminister"],
       out:[{t:"you", text:"I'll do it. And I'm going to say the causal claim isn't established, on their air, to their audience."},
            {t:"msg", who:"priya", lines:["You did it. Anchor did not enjoy it.","You said 'the flights are proven, the link is not, and I'd ask everyone to hold those apart.' It's being clipped both ways — but the science community clip is running further."]},
            {t:"msg", who:"chandra", lines:["I don't know you, but I watched that. Thank you.","I've been trying to say this for six hours and nobody wanted the boring version. I'll go on record with you whenever you want."]}],
@@ -898,14 +898,14 @@ const ROUNDS = [
     },
     { k:"B", label:"Go live. Stick to what you published, don't pick a fight.",
       detail:"Restate the reporting, decline to characterise the minister's remarks. Don't become the story.",
-      s:{rigor:0, tempo:+2, trust:0, nerve:-1}, flags:["wentlive"],
+      s:{rigor:0, tempo:+2, trust:+1, nerve:-1}, flags:["wentlive"],
       out:[{t:"you", text:"I'll do it, but I'm not going to get into a fight with a minister on live television."},
            {t:"msg", who:"priya", lines:["It was fine. Careful.","The clip they've cut is you nodding while the anchor says 'so the science is clear.' You didn't say it. You're in the frame while it was said."]}],
       note:"Declining to correct an overreach in your presence transfers your authority to it. <b>Standing beside a false statement is a form of endorsement</b> that no transcript will ever record and every clip will."
     },
     { k:"C", label:"Decline the hit. Publish a precise clarification instead.",
       detail:"Written, on your own platform, where every word is yours and nothing can be edited into a clip.",
-      s:{rigor:+2, tempo:-1, trust:+1, nerve:+1}, flags:["clarified"],
+      s:{rigor:+2, tempo:-1, trust:+1, nerve:-1}, flags:["clarified"],
       out:[{t:"you", text:"No TV. We publish a clarification where I control every word and nobody can cut it."},
            {t:"article", kicker:"THE MERIDIAN · EDITOR'S NOTE", h:"On the Minister's Remarks: What Our Reporting Does and Does Not Establish",
             p:"The unauthorised flights are confirmed. The causal link to this year's monsoon is not. We do not believe policy should be made on the strength of an unreviewed preprint."},
@@ -954,7 +954,7 @@ const ROUNDS = [
     },
     { k:"B", label:"Hold it. Verify the draft's provenance first.",
       detail:"Confirm the attached PDF is genuine and get a second author on the record before publishing something this consequential.",
-      s:{rigor:+2, tempo:-1, trust:+1, nerve:+1}, flags:["verifiedhallam"],
+      s:{rigor:+2, tempo:-1, trust:0, nerve:0}, flags:["verifiedhallam"],
       out:[{t:"you", text:"Verify the PDF metadata and try the second author. I'm not publishing a document I can't authenticate, even one that helps us."},
            {t:"msg", who:"marcus", lines:["Right call in principle. Metadata checks out, took two hours.","In those two hours the minister announced a formal inquiry. The correction is now landing into a much harder wall than it would have at noon."]}],
       note:"Verification discipline applied consistently — including to evidence that <b>flatters your judgement</b>, which is exactly when it's hardest to apply. The cost is real: corrections decay in value by the hour, and this one aged into a policy announcement."
@@ -1007,7 +1007,7 @@ const ROUNDS = [
     },
     { k:"B", label:"Counter: full interview, no conditions, right of reply as normal.",
       detail:"He wants to be understood more than he wants the clause. Test that.",
-      s:{rigor:+2, tempo:+1, trust:+2, nerve:+3}, flags:["countered"],
+      s:{rigor:+1, tempo:+1, trust:+2, nerve:+3}, flags:["countered"],
       out:[{t:"you", text:"No conditions. You get a full, fair right of reply like anyone else, and I'll quote your physicist at length. That's the offer."},
            {t:"msg", who:"voss", lines:["...Fine. Thursday. Bring someone who understands aerosol optical depth.","For the record I expected you to take the clause. Most do."]}],
       note:"Correctly read. A subject demanding unedited space usually wants <b>not to be distorted</b> — an offer of genuine, generous, edited fairness satisfies the real need without surrendering control. Testing the condition cost one message."
@@ -1054,14 +1054,14 @@ const ROUNDS = [
   options:[
     { k:"A", label:"Say nothing. It's a distraction from the story.",
       detail:"Don't feed it. The reporting stands on its own merits.",
-      s:{rigor:0, tempo:0, trust:-3, nerve:-2}, flags:["ignoredprofile"],
+      s:{rigor:0, tempo:0, trust:-3, nerve:0}, flags:["ignoredprofile"],
       out:[{t:"you", text:"We're not engaging. It's a sideshow."},
            {t:"msg", who:"tobi", lines:["It's not going away. It's now being cited in the ministry's briefing pack as evidence of 'Western media capture.'","Our silence is the story's fuel."]}],
       note:"Institutional silence in the face of a fair criticism is read as a concession with an attitude. The critique <b>metastasised into a geopolitical talking point</b> in the vacuum where an answer should have been."
     },
     { k:"B", label:"Add an editor's note to the old profile linking to current coverage.",
       detail:"Contextualise it honestly. Don't rewrite history, annotate it.",
-      s:{rigor:+2, tempo:+2, trust:+2, nerve:+1}, flags:["editorsnote"],
+      s:{rigor:+2, tempo:+2, trust:+2, nerve:0}, flags:["editorsnote"],
       out:[{t:"you", text:"Editor's note at the top of the profile. Dated, signed, links to tonight's reporting. Nothing gets deleted."},
            {t:"article", kicker:"THE MERIDIAN · EDITOR'S NOTE, APPENDED", h:"The Man Who Might Cool the Planet",
             p:"EDITOR'S NOTE, 14 SEPT: This profile was published in July last year. It did not adequately examine questions of consent and governance now central to reporting on Kestrel Climate. It remains available unaltered. Our current coverage is here."},
@@ -1070,7 +1070,7 @@ const ROUNDS = [
     },
     { k:"C", label:"Commission the accountability piece about your own coverage.",
       detail:"Assign a reporter to examine how The Meridian covered Voss, with editorial cooperation and no veto.",
-      s:{rigor:+3, tempo:+1, trust:+3, nerve:+3}, flags:["selfaccount"],
+      s:{rigor:+1, tempo:+1, trust:+3, nerve:+3}, flags:["selfaccount"],
       out:[{t:"you", text:"Editor's note now. And I'm commissioning a piece on how we covered Voss — full access, no veto, Dana sits for an interview like any other subject."},
            {t:"msg", who:"dana", lines:["...Yes. Do it.","I'd have understood if you hadn't. Most wouldn't. It's a genuinely unpleasant thing to sit for and I'll sit for it."]},
            {t:"post", who:"Dr Nomsa Achebe", handle:"@n_achebe_atmos", v:false, c:"#B98CE0", i:"NA",
@@ -1133,7 +1133,7 @@ const ROUNDS = [
     },
     { k:"C", label:"Lead: the governance scandal is untouched by this.",
       detail:"The real story was always consent and precedent, not this monsoon. Don't let the physics bury it.",
-      s:{rigor:-1, tempo:+1, trust:0, nerve:+1}, flags:["ledgovernance"],
+      s:{rigor:-1, tempo:+1, trust:0, nerve:+2}, flags:["ledgovernance"],
       out:[{t:"you", text:"Lead on governance. The causal claim was never the real story."},
            {t:"msg", who:"marcus", lines:["I'm sympathetic and I think it's a dodge.","We spent two days putting the causal claim in front of millions of people. Leading with 'the real story was always something else' is how we avoid saying we got it wrong."]}],
       note:"Pivoting to the defensible story to avoid correcting the indefensible one. Marcus names it exactly: <b>the causal claim was your coverage</b>, and reframing is not the same as correcting."
@@ -1182,7 +1182,7 @@ const ROUNDS = [
     },
     { k:"C", label:"A signed editor's piece on what went wrong and why.",
       detail:"Not a correction notice — a considered account of the decision chain, under your byline.",
-      s:{rigor:+2, tempo:0, trust:+2, nerve:+3}, flags:["signedaccount"],
+      s:{rigor:0, tempo:0, trust:+2, nerve:+3}, flags:["signedaccount"],
       out:[{t:"you", text:"I'll write it myself. What we knew at each hour, what we chose, and where I got it wrong."},
            {t:"article", kicker:"THE MERIDIAN · FROM THE DEPUTY DIGITAL EDITOR", h:"We Had Four Hours and a Press Release. Here Is Every Decision I Made.",
             p:"An hour-by-hour account of how this publication covered the Kestrel preprint, including the calls I would make differently."},
@@ -1222,14 +1222,14 @@ const ROUNDS = [
   options:[
     { k:"A", label:"Restate the science more forcefully.",
       detail:"The facts don't change based on who finds them inconvenient. Say it more clearly.",
-      s:{rigor:+1, tempo:+1, trust:-3, nerve:0}, flags:["doubleddown"],
+      s:{rigor:+1, tempo:+1, trust:-3, nerve:+1}, flags:["doubleddown"],
       out:[{t:"you", text:"We restate the findings clearly and we don't soften for anybody."},
            {t:"msg", who:"priya", lines:["It read as a lecture, because it was one.","Nobody here disputed the dipole. They disputed being told that the thing done to them doesn't count. You answered a question they weren't asking."]}],
       note:"The information-deficit reflex: assume disagreement is misunderstanding and apply more facts. The dispute was <b>never about the dipole</b> — it was about whether their grievance survives the correction. Repetition cannot answer that."
     },
     { k:"B", label:"Report from the protest. Their grievance is the story now.",
       detail:"Send Priya. The governance question, told by the people it was done to.",
-      s:{rigor:+2, tempo:+2, trust:+3, nerve:+2}, flags:["reportedprotest"],
+      s:{rigor:0, tempo:+2, trust:+3, nerve:+2}, flags:["reportedprotest"],
       out:[{t:"you", text:"Priya — file from there. Not a reaction piece. The governance question told by the people it was done to."},
            {t:"article", kicker:"THE MERIDIAN · REPORTING FROM THE FIELD", h:"“Nobody Asked Us.” The Monsoon Wasn't Their Doing — But the Sky Still Isn't Theirs.",
             p:"The rainfall failed for reasons no company caused. The question of who may alter the atmosphere above 190 million people without their consent remains exactly as open as it was."},
@@ -1238,7 +1238,7 @@ const ROUNDS = [
     },
     { k:"C", label:"Publish a plain-language explainer in translation.",
       detail:"Both findings, in the regional languages, distributed where the anger actually is.",
-      s:{rigor:+3, tempo:+2, trust:+2, nerve:+1}, flags:["translated"],
+      s:{rigor:+2, tempo:+2, trust:+2, nerve:+1}, flags:["translated"],
       out:[{t:"you", text:"Both findings, plain language, translated, and pushed to the platforms it's actually spreading on. Not our homepage."},
            {t:"msg", who:"priya", lines:["That's more than anyone else has done and it matters.","It's still us explaining to them. But it's in their language and it's on the platforms they use, which is more than the correction was."]}],
       note:"Meeting the audience where the error actually spread, in the language it spread in — a serious and rarely-resourced move. Priya's caveat is the useful one: <b>explanation is not yet participation</b>, but it is a long way past a homepage note."
@@ -1260,7 +1260,14 @@ const ROUNDS = [
 ];
 
 /* ============================================================
-   ARCHETYPES — keyed on (strongest axis, weakest axis)
+   ARCHETYPES — keyed on (strongest axis, weakest axis).
+
+   Three shapes are deliberately absent: trust|nerve, trust|rigor and
+   nerve|rigor. In this scenario every trust-building action also demands
+   courage or evidence discipline, so a trust-led profile is unreachable
+   even under play optimised for it. Rather than distort the scoring to
+   populate a tidier taxonomy, those labels are omitted and the balanced /
+   passenger fallback covers them if the spine is ever rebalanced.
    ============================================================ */
 const AXES = [
   {k:"rigor", n:"RIGOUR", c:"RIG", g:"Proportion between what you claimed and what you could show."},
@@ -1278,16 +1285,10 @@ const ARCHETYPES = {
     d:"Careful, correct, and lapped. Almost nothing you published was wrong; a great deal of it arrived after the frame had set without you. The uncomfortable finding of this simulation is that rigour delivered late is not neutral — the vacuum you left was filled by people with less reason to be careful." },
   "nerve|trust":{ t:"THE FORTRESS",
     d:"You did not fold — not to a minister, not to a founder, not to your own audience. You also did not concede, correct loudly, or treat criticism as information. Independence hardened into imperviousness. The failure mode is subtle: never wrong in your own account, and increasingly alone in holding it." },
-  "trust|nerve":{ t:"THE WEATHERVANE",
-    d:"You moved toward whoever applied pressure most recently, and each individual move was defensible. Read your log in sequence rather than one decision at a time — the pattern is a publication whose position on any given hour could be predicted from who had called it most recently, which is the opposite of an editorial line." },
   "tempo|trust":{ t:"THE CANNON",
     d:"Fast, decisive, and expensive in relationships. You met every moment and spent a source, a colleague or an audience doing it. The reach was real. So was the attrition — and in a story that ran for days, the people you spent were the ones who would have handed you the correction." },
   "rigor|trust":{ t:"THE AUDITOR",
     d:"Your evidence discipline was genuinely strong and it was applied to documents rather than to people. Hallam, Priya and the protest were all sources of information you handled as material rather than as relationships. The methodological calls were sound; the human ones cost you the story's second half." },
-  "trust|rigor":{ t:"THE DIPLOMAT",
-    d:"You kept the room — sources, colleagues, audience — and you kept it partly by not saying hard things loudly enough. Where the evidence demanded a blunt sentence, you found a softer one. Trust accumulated this way is real but it is borrowed against the next story, and the bill comes due at the correction." },
-  "nerve|rigor":{ t:"THE CRUSADER",
-    d:"You were fearless and directionally committed. Once the story had a shape you defended it, and the evidence arrived to a position already taken. The tell is Round 8: when the moral story and the factual story came apart, conviction is precisely what makes that divergence hardest to publish." },
   "tempo|nerve":{ t:"THE CONDUIT",
     d:"You were quick and you were permeable. The pressure that arrived — competitive, political, commercial — mostly passed straight through into the coverage. Fast reflexes without a hard editorial centre make a publication into an amplifier of whoever is loudest at the time, which is the mechanism this whole story runs on." },
   "trust|tempo":{ t:"THE STEWARD",
@@ -1297,7 +1298,7 @@ const ARCHETYPES = {
   "rigor|nerve":{ t:"THE TECHNICIAN",
     d:"Methodologically excellent and institutionally quiet. You read the paper, you found the gap, and then you let ministers, founders and rivals set what the finding meant. Getting the science right is the first half of the job; the second half is being willing to say so where it is unwelcome." },
   passenger:{ t:"THE PASSENGER",
-    d:"No axis pulled clearly ahead of the others, and none of them pulled far from where you started. This is the profile of a desk that reacted rather than decided — options taken because they were in front of you, or clocks that ran out while you weighed them. Check your log for entries marked NO DECISION: in a story moving this fast, the absence of an editorial choice is filled within minutes by a press office, a sub-editor or a rival." }
+    d:"No axis finished as a strength. This is the profile of a desk that was carried by the story rather than steering it — options taken because they were in front of you, or clocks that ran out while you weighed them. Check your log for entries marked NO DECISION: in a story moving this fast the absence of an editorial choice is filled within minutes, by a press office, a sub-editor or a rival, and the resulting coverage still goes out under your masthead." }
 };
 
 /* ============================================================
@@ -1530,6 +1531,10 @@ function archetypeFor(){
   const vals = AXES.map(a => ({k:a.k, v:state.s[a.k]})).sort((a,b)=> b.v - a.v);
   const hi = vals[0], lo = vals[vals.length-1];
   const avg = vals.reduce((t,x)=> t + x.v, 0) / vals.length;
+
+  /* If nothing became a strength, the shape is noise — a run of expired
+     clocks would otherwise read as whichever axis decayed slowest. */
+  if(hi.v <= 2) return ARCHETYPES.passenger;
 
   if(hi.v - lo.v <= 8){
     return avg >= 6 ? ARCHETYPES.balanced : ARCHETYPES.passenger;
