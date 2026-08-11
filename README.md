@@ -41,6 +41,35 @@ Edit the sources, never `docs/`.
 
 ---
 
+## Working on this together
+
+The repo is the shared surface — a Claude Code session belongs to one account and is read-only to anyone else, so collaboration happens here.
+
+```bash
+git clone https://github.com/michellefitz/science-journalism-simulator
+cd science-journalism-simulator
+npm install          # playwright, for the browser checks
+npx playwright install chromium
+
+npm test             # scenario + ui
+npm run build        # regenerate docs/ after editing a source
+```
+
+`npm test` runs two suites, and each check exists because it caught a real bug:
+
+| Suite | Catches |
+|---|---|
+| `test/scenario.mjs` | Malformed rounds, a `who` that is not in `CAST`, an option missing its debrief note, and archetypes that no route through the game can actually reach. No browser needed. |
+| `test/ui.mjs` | Declared CSS that silently does not apply, a decision sheet that covers the story, options that scroll out of reach, text below WCAG AA, and a layout that strands after the iOS keyboard closes. Runs on a phone profile. |
+
+Set `CHROMIUM_PATH` if your browser is not where Playwright expects it.
+
+**Edit the two source files, never `docs/`.** CI fails if the committed build has drifted from the sources — run `npm run build` and commit the result alongside your change.
+
+Branch per person and open a pull request; Vercel builds a preview URL for each one, which is the quickest way to try a change on a real phone before it reaches `main`.
+
+---
+
 ## The design decisions worth keeping
 
 **A fixed spine, not a branching tree.** Everyone gets the same ten injects in the same order; only the responses diverge. This is what makes a group debrief possible — two people who chose differently at Decision 7 were standing in exactly the same place when they chose. Full branching would produce a hundred private experiences and nothing to compare. This mirrors how tabletop crisis exercises are actually structured, and how First Draft ran its newsroom simulations.
@@ -61,7 +90,7 @@ There are eleven, and all eleven are reachable — verified by directed search r
 
 ## Editing the scenario
 
-All content lives in two structures near the top of the `<script>` block in `index.html`. There is no build step — edit and reload.
+All content lives in two structures near the top of the `<script>` block in `index.html`. Open the file directly in a browser to iterate — no build needed for that; `npm run build` is only for regenerating the deployed copy in `docs/`.
 
 `CAST` — everyone who can send a message, with display name, role, initials and colour.
 

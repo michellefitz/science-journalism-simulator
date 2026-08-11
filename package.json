@@ -1,0 +1,16 @@
+{
+  "name": "monsoon-simulator",
+  "version": "1.0.0",
+  "private": true,
+  "description": "MONSOON — a live crisis simulation for science journalists",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node test/scenario.mjs && node test/ui.mjs",
+    "test:scenario": "node test/scenario.mjs",
+    "test:ui": "node test/ui.mjs"
+  },
+  "devDependencies": {
+    "playwright": "^1.49.0"
+  }
+}

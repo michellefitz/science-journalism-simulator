@@ -1,15 +1,15 @@
-name: Deploy to GitHub Pages
+name: Checks
 
-# Rebuilds docs/ from the artifact sources and publishes it, so the live site
-# can never drift from index.html / facilitator.html.
+# Runs the scenario and browser suites, rebuilds docs/ and refuses a build
+# that has drifted from its sources or that reaches for the network.
 #
-# Until Pages is enabled on the repo (Settings -> Pages -> Source: GitHub
-# Actions) this still builds and validates, then stops with a notice rather
-# than failing - a red X on every push is not a useful thing to look at.
+# Deployment is Vercel's job. The Pages steps at the end are dormant unless
+# a Pages site exists, and are kept only as a fallback host.
 
 on:
   push:
-    branches: [claude/journalism-crisis-sim-xv73rc, main]
+    branches: [main]
+  pull_request:
   workflow_dispatch:
 
 permissions:
@@ -31,6 +31,15 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+
+      - name: Install test dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Scenario checks
+        run: node test/scenario.mjs
+
+      - name: Browser checks
+        run: npx playwright install --with-deps chromium && node test/ui.mjs
 
       - name: Build standalone pages
         run: node build.mjs
