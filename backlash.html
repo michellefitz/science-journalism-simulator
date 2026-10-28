@@ -1,0 +1,1658 @@
+<title>BACKLASH — A Science Journalism Crisis Simulation</title>
+
+<style>
+/* ============================================================
+   MONSOON — a newsroom instrument.
+
+   Committed to light. The brief was clarity, and a dark ground was
+   costing legibility for atmosphere.
+
+   Six colours, five type sizes. Red is the only hue in the interface and
+   it means one thing: time is running out, or this is a FLASH. Wire
+   priority escalates by ink density rather than by colour, so severity
+   reads before the words do.
+   ============================================================ */
+
+:root{
+  color-scheme: light;
+
+  --paper:#FFFFFF;
+  --surface:#F1F2F5;      /* incoming bubbles, cards - grey with a faint blue bias */
+  --surface-2:#E5E7EB;
+  --rule:#D8DBE1;
+  --ink:#0F1115;          /* 17.7:1 on paper */
+  --ink-2:#565C68;        /* 7.1:1 on paper  */
+  --urgent:#C42618;       /* the only accent. clock, FLASH, nothing else */
+  --good:#1B6E42;         /* semantic only, for the standing rail */
+
+  --sans:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --mono:ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  --serif:"Iowan Old Style", Charter, Georgia, "Times New Roman", serif;
+
+  /* five sizes, and nothing between them */
+  --t-meta:11px;
+  --t-detail:13.5px;
+  --t-body:16px;
+  --t-lead:19px;
+  --t-title:30px;
+
+  --dev-w:452px;
+}
+
+*{ box-sizing:border-box; }
+
+/* Pinned rather than merely overflow-hidden: on iOS the document itself can
+   be left scrolled after the keyboard closes, which is what leaves a strip of
+   backdrop along the bottom and shunts the whole app upward. */
+body{
+  margin:0;
+  position:fixed; inset:0;
+  background:#DFE1E6;
+  color:var(--ink);
+  font-family:var(--sans);
+  font-size:var(--t-body);
+  -webkit-font-smoothing:antialiased;
+  -webkit-text-size-adjust:100%;
+  overflow:hidden;
+}
+
+.room{ position:fixed; inset:0; background:#DFE1E6; z-index:0; }
+
+.stage{
+  position:relative; z-index:1;
+  /* --vh is written from visualViewport, the only measurement that tracks the
+     software keyboard on iOS. dvh is the fallback where that is unavailable. */
+  height:100vh; height:100dvh; height:var(--vh, 100dvh);
+  display:flex; align-items:center; justify-content:center;
+}
+
+/* ---------- device ---------- */
+.device{
+  width:100%; max-width:var(--dev-w);
+  height:100%; max-height:980px;
+  background:var(--paper);
+  display:flex; flex-direction:column;
+  position:relative; overflow:hidden;
+}
+@media(min-width:540px) and (min-height:720px){
+  .device{
+    height:calc(100% - 48px);
+    border-radius:20px;
+    box-shadow:0 24px 60px rgba(15,17,21,.18), 0 2px 8px rgba(15,17,21,.08);
+  }
+}
+
+/* ---------- status ---------- */
+.statusbar{
+  flex:0 0 auto;
+  padding:14px 20px 0;
+  font-family:var(--mono); font-size:var(--t-meta);
+  letter-spacing:.04em; color:var(--ink-2);
+  display:flex; justify-content:space-between; align-items:baseline;
+  font-variant-numeric:tabular-nums;
+}
+.statusbar .brand{ color:var(--ink); font-weight:600; letter-spacing:.06em; }
+.statusbar .brand b{ color:var(--urgent); font-weight:700; }
+
+/* standing rail: four segments, direction felt not read */
+.rail{ flex:0 0 auto; display:flex; gap:4px; padding:12px 20px 13px; }
+.rail .seg{ height:3px; flex:1; background:var(--surface-2); border-radius:2px; overflow:hidden; }
+.rail .seg i{
+  position:relative; display:block; height:100%;
+  background:var(--ink-2); transform-origin:left center; transform:scaleX(.5);
+  transition:transform .9s cubic-bezier(.2,.7,.2,1), background .4s;
+}
+.rail .seg.up i{ background:var(--good); }
+.rail .seg.down i{ background:var(--urgent); }
+
+/* ---------- thread ---------- */
+.thread{
+  flex:1 1 auto; min-height:0;
+  overflow-y:auto; overflow-x:hidden;
+  padding:8px 20px 16px;
+  display:flex; flex-direction:column; gap:18px;
+  scroll-behavior:smooth;
+  border-top:1px solid var(--rule);
+}
+.thread::-webkit-scrollbar{ width:0; }
+
+.enter{ animation:rise .4s cubic-bezier(.2,.8,.25,1) both; }
+@keyframes rise{ from{ opacity:0; transform:translateY(10px); } to{ opacity:1; transform:none; } }
+
+.clock{
+  text-align:center; padding:10px 0 2px;
+  font-family:var(--mono); font-size:var(--t-meta);
+  letter-spacing:.14em; color:var(--ink-2);
+  font-variant-numeric:tabular-nums;
+}
+
+/* wire card - priority by ink density, not hue */
+.wire{ border-radius:10px; overflow:hidden; border:1px solid var(--rule); }
+.wire .prio{
+  font-family:var(--mono); font-size:var(--t-meta); font-weight:700;
+  letter-spacing:.16em; padding:8px 12px;
+  display:flex; justify-content:space-between; align-items:center;
+}
+.wire.flash    .prio{ background:var(--urgent); color:#fff; }
+.wire.bulletin .prio{ background:var(--ink);    color:#fff; }
+.wire.urgent   .prio{ background:#3A4150;       color:#fff; }
+.wire.advisory .prio{ background:var(--surface-2); color:var(--ink); }
+.wire .prio span:last-child{ font-weight:500; opacity:.8; letter-spacing:.08em; }
+.wire .hed{
+  font-size:var(--t-body); font-weight:650; line-height:1.35;
+  padding:14px 14px 0; letter-spacing:-.01em;
+}
+.wire .sub{
+  padding:8px 14px 14px;
+  font-size:var(--t-detail); line-height:1.55; color:var(--ink-2);
+}
+
+/* person message */
+.msg{ display:flex; gap:10px; align-items:flex-start; }
+.av{
+  flex:0 0 34px; width:34px; height:34px; border-radius:50%;
+  display:grid; place-items:center; margin-top:22px;
+  font-family:var(--mono); font-size:var(--t-meta); font-weight:700;
+  background:var(--surface-2); color:var(--ink);
+}
+.msg .body{ flex:1 1 auto; min-width:0; }
+.msg .who{
+  font-size:var(--t-meta); letter-spacing:.02em;
+  color:var(--ink-2); margin-bottom:6px; padding-left:2px;
+}
+.msg .who b{ color:var(--ink); font-weight:650; font-size:var(--t-detail); }
+.bubble{
+  background:var(--surface);
+  border-radius:4px 16px 16px 16px;
+  padding:11px 14px;
+  font-size:var(--t-body); line-height:1.5;
+}
+.bubble + .bubble{ margin-top:6px; border-radius:16px; }
+.bubble .att{
+  margin-top:11px; padding-top:11px; border-top:1px solid var(--rule);
+  font-family:var(--mono); font-size:var(--t-meta); line-height:1.7; color:var(--ink-2);
+}
+.bubble .att b{ color:var(--ink); font-weight:700; }
+
+/* your own words: solid ink, unmistakably yours */
+.out{ align-self:flex-end; max-width:86%; }
+.out .who{
+  text-align:right; font-size:var(--t-meta);
+  color:var(--ink-2); margin-bottom:6px;
+}
+.out .bubble{
+  background:var(--ink); color:#fff;
+  border-radius:16px 4px 16px 16px;
+}
+
+/* social post */
+.post{ border:1px solid var(--rule); border-radius:12px; padding:14px; }
+.post .top{ display:flex; gap:10px; align-items:center; margin-bottom:10px; }
+.post .pav{
+  width:30px; height:30px; border-radius:50%; flex:0 0 30px;
+  display:grid; place-items:center;
+  font-family:var(--mono); font-size:var(--t-meta); font-weight:700;
+  background:var(--surface-2); color:var(--ink);
+}
+.post .nm{ font-size:var(--t-detail); font-weight:650; line-height:1.3; }
+.post .nm i{ font-style:normal; color:var(--ink-2); margin-left:4px; }
+.post .hd{ font-family:var(--mono); font-size:var(--t-meta); color:var(--ink-2); }
+.post .txt{ font-size:var(--t-body); line-height:1.5; }
+.post .eng{
+  margin-top:12px; padding-top:10px; border-top:1px solid var(--rule);
+  display:flex; gap:18px;
+  font-family:var(--mono); font-size:var(--t-meta); color:var(--ink-2);
+  font-variant-numeric:tabular-nums;
+}
+.post .eng b{ color:var(--ink); font-weight:650; }
+
+/* published copy - the one place serif appears, marking wire becoming print */
+.article{ border:1px solid var(--ink); border-radius:10px; padding:16px; }
+.article .kicker{
+  font-family:var(--mono); font-size:var(--t-meta); letter-spacing:.14em;
+  color:var(--ink); font-weight:700; margin-bottom:10px;
+}
+.article h4{
+  font-family:var(--serif); font-size:var(--t-lead); line-height:1.28;
+  font-weight:700; margin:0 0 8px; text-wrap:balance; letter-spacing:-.01em;
+}
+.article p{
+  font-family:var(--serif); font-size:var(--t-detail); line-height:1.6;
+  color:var(--ink-2); margin:0;
+}
+
+/* desk note */
+.sysnote{
+  background:var(--surface); border-radius:10px; padding:12px 14px;
+  font-size:var(--t-detail); line-height:1.6; color:var(--ink-2);
+}
+.sysnote b{ color:var(--ink); font-weight:650; }
+
+/* typing */
+.typing{ display:flex; gap:10px; align-items:center; }
+.typing .dots{
+  background:var(--surface); border-radius:16px; padding:13px 15px;
+  display:flex; gap:5px;
+}
+.typing .dots i{
+  width:6px; height:6px; border-radius:50%; background:var(--ink-2);
+  animation:blip 1.3s infinite ease-in-out;
+}
+.typing .dots i:nth-child(2){ animation-delay:.18s; }
+.typing .dots i:nth-child(3){ animation-delay:.36s; }
+@keyframes blip{ 0%,60%,100%{opacity:.3; transform:translateY(0);} 30%{opacity:1; transform:translateY(-3px);} }
+
+/* ---------- decision sheet ---------- */
+#sheetHost{
+  flex:0 0 auto; min-height:0; max-height:72%;
+  display:flex; flex-direction:column;
+}
+#sheetHost:has(.sheet[data-open="false"]){ max-height:none; }
+
+.sheet{
+  flex:1 1 auto; min-height:0;
+  background:var(--paper);
+  border-top:1px solid var(--rule);
+  box-shadow:0 -8px 24px rgba(15,17,21,.06);
+  display:flex; flex-direction:column;
+  animation:sheetup .4s cubic-bezier(.2,.8,.25,1) both;
+}
+@keyframes sheetup{ from{ transform:translateY(100%); } to{ transform:none; } }
+
+.handle{
+  flex:0 0 auto; width:100%;
+  background:none; border:none; color:inherit; font-family:inherit;
+  padding:14px 20px 16px; cursor:pointer; text-align:left;
+  display:flex; flex-direction:column; gap:11px;
+}
+.handle:focus-visible{ outline:2px solid var(--ink); outline-offset:-3px; }
+.hrow{
+  display:flex; justify-content:space-between; align-items:center;
+  font-family:var(--mono); font-size:var(--t-meta); letter-spacing:.12em;
+  color:var(--ink-2);
+}
+.hcta{
+  display:flex; justify-content:space-between; align-items:center; gap:12px;
+  background:var(--ink); color:#fff;
+  border-radius:12px; padding:15px 16px;
+  font-size:var(--t-detail); font-weight:650; letter-spacing:.02em;
+  transition:opacity .16s;
+}
+.handle:hover .hcta{ opacity:.88; }
+.ctaright{ display:flex; align-items:center; gap:12px; flex:0 0 auto; }
+.hcta .chev{ transition:transform .25s ease; opacity:.65; font-size:var(--t-meta); }
+
+/* open state: the button steps back once its job is done */
+.sheet[data-open="true"] .hcta{
+  background:var(--surface); color:var(--ink-2); font-weight:500;
+}
+.sheet[data-open="true"] .hcta .chev{ transform:rotate(180deg); }
+.sheet[data-open="false"] .sbody{ display:none; }
+
+/* the clock. the only red on a quiet screen. */
+.hcta .cd{
+  font-family:var(--mono); font-variant-numeric:tabular-nums;
+  font-size:var(--t-detail); font-weight:700; letter-spacing:.02em;
+  padding:4px 9px; border-radius:6px;
+  background:#2C313A; color:#fff;   /* solid, so contrast is deterministic */
+  min-width:48px; text-align:center;
+  transition:background .3s, color .3s;
+}
+.sheet[data-open="true"] .hcta .cd{ background:var(--surface-2); color:var(--ink); }
+.hcta .cd.hot,
+.sheet[data-open="true"] .hcta .cd.hot{
+  background:var(--urgent); color:#fff;
+  animation:tick 1s steps(2,end) infinite;
+}
+@keyframes tick{ 0%,60%{opacity:1;} 61%,100%{opacity:.6;} }
+
+.fuse{ height:2px; background:var(--surface-2); position:relative; overflow:hidden; flex:0 0 auto; }
+.fuse i{
+  position:absolute; inset:0; background:var(--ink);
+  transform-origin:left center;
+  transition:transform 1s linear, background .4s;
+}
+.fuse i.hot{ background:var(--urgent); }
+
+.sbody{ flex:1 1 auto; min-height:0; display:flex; flex-direction:column; }
+.sheet .q{
+  flex:0 0 auto; padding:16px 20px 12px;
+  font-size:var(--t-lead); line-height:1.35; font-weight:650;
+  letter-spacing:-.01em; text-wrap:balance;
+}
+
+.opts{
+  flex:1 1 auto; min-height:0; overflow-y:auto;
+  padding:0 20px 20px; display:flex; flex-direction:column; gap:10px;
+  -webkit-overflow-scrolling:touch;
+}
+.opts::-webkit-scrollbar{ width:0; }
+
+.opt{
+  width:100%; text-align:left;
+  background:var(--surface); border:1px solid transparent;
+  border-radius:12px; padding:14px 16px;
+  color:var(--ink); font-family:inherit;
+  cursor:pointer; display:flex; gap:12px; align-items:flex-start;
+  transition:background .16s, border-color .16s, transform .1s;
+}
+.opt:hover{ background:var(--surface-2); border-color:var(--rule); }
+.opt:active{ transform:scale(.994); }
+.opt:focus-visible{ outline:2px solid var(--ink); outline-offset:2px; }
+.opt .key{
+  flex:0 0 auto; font-family:var(--mono); font-size:var(--t-meta); font-weight:700;
+  background:var(--paper); color:var(--ink);
+  border-radius:6px; padding:3px 7px; margin-top:1px;
+}
+.opt strong{ font-weight:650; display:block; font-size:var(--t-body); line-height:1.35; }
+.opt em{
+  font-style:normal; display:block; margin-top:5px;
+  font-size:var(--t-detail); line-height:1.5; color:var(--ink-2);
+}
+.opt[disabled]{ opacity:.45; pointer-events:none; }
+
+/* ---------- lobby ---------- */
+.lobby{
+  position:absolute; inset:0; z-index:20; background:var(--paper);
+  display:flex; flex-direction:column; padding:32px 24px 28px;
+  overflow-y:auto;
+}
+.lobby::-webkit-scrollbar{ width:0; }
+.lobby .spacer{ flex:1 1 auto; min-height:8px; }
+
+.lockclock{
+  font-size:64px; font-weight:250; letter-spacing:-.02em; line-height:1.08;
+  font-variant-numeric:tabular-nums;
+}
+.lockdate{
+  font-size:var(--t-detail); color:var(--ink-2); margin-top:8px;
+  letter-spacing:.02em;
+}
+
+.alertcard{
+  margin-top:28px; width:100%; display:block; text-align:left;
+  background:var(--surface); border:none; border-radius:16px;
+  padding:16px 18px; cursor:pointer; color:inherit; font-family:inherit;
+  animation:buzz .5s cubic-bezier(.36,.07,.19,.97) .45s both;
+  transition:background .18s;
+}
+.alertcard:hover{ background:var(--surface-2); }
+.alertcard:focus-visible{ outline:2px solid var(--ink); outline-offset:3px; }
+@keyframes buzz{
+  0%{ opacity:0; transform:translateY(-10px); }
+  55%{ opacity:1; transform:translateX(3px); }
+  70%{ transform:translateX(-3px); }
+  85%{ transform:translateX(2px); }
+  100%{ opacity:1; transform:none; }
+}
+.alertcard .ahead{
+  font-family:var(--mono); font-size:var(--t-meta); letter-spacing:.1em;
+  color:var(--urgent); font-weight:700;
+  display:flex; justify-content:space-between; margin-bottom:9px;
+}
+.alertcard .atitle{ font-size:var(--t-body); font-weight:650; line-height:1.35; margin-bottom:5px; }
+.alertcard .abody{ font-size:var(--t-detail); line-height:1.5; color:var(--ink-2); }
+.alertcard .atap{
+  margin-top:12px; font-size:var(--t-detail); font-weight:650; color:var(--ink);
+}
+
+.brief{ margin-top:26px; }
+.brief .eyebrow{
+  font-family:var(--mono); font-size:var(--t-meta); letter-spacing:.14em;
+  color:var(--ink-2); margin-bottom:12px;
+}
+.brief h1{
+  font-size:var(--t-title); line-height:1; font-weight:700;
+  letter-spacing:-.03em; margin:0 0 8px;
+}
+.brief .tag{
+  font-family:var(--mono); font-size:var(--t-meta); letter-spacing:.08em;
+  color:var(--ink-2); margin-bottom:22px;
+}
+.brief p{ font-size:var(--t-detail); line-height:1.6; color:var(--ink-2); margin:0 0 12px; }
+.brief p b{ color:var(--ink); font-weight:650; }
+
+.situation{ display:flex; flex-direction:column; gap:16px; margin:0 0 22px; }
+.sit{
+  font-size:var(--t-detail); line-height:1.6; color:var(--ink-2);
+}
+.sit b{ color:var(--ink); font-weight:650; display:block; margin-bottom:4px; font-size:var(--t-body); }
+.sit em{ font-style:normal; font-weight:650; color:var(--ink); }
+
+.roleslab{
+  background:var(--surface); border-radius:14px;
+  padding:16px 18px; margin:18px 0 4px;
+}
+.roleslab dt{
+  font-family:var(--mono); font-size:var(--t-meta); letter-spacing:.12em;
+  color:var(--ink-2); margin-bottom:5px;
+}
+.roleslab dd{ margin:0 0 14px; font-size:var(--t-detail); line-height:1.55; }
+.roleslab dd:last-child{ margin-bottom:0; }
+.roleslab dd b{ color:var(--ink); font-weight:650; }
+
+.field{ margin-top:20px; }
+.field label{
+  display:block; font-family:var(--mono); font-size:var(--t-meta);
+  letter-spacing:.12em; color:var(--ink-2); margin-bottom:8px;
+}
+.field input{
+  width:100%; background:var(--surface); color:var(--ink);
+  border:1px solid transparent; border-radius:12px;
+  padding:14px; font-family:inherit; font-size:var(--t-body);
+}
+.field input:focus{ outline:none; border-color:var(--ink); background:var(--paper); }
+
+.toggle{
+  display:flex; align-items:center; gap:11px; margin-top:16px;
+  font-size:var(--t-detail); color:var(--ink-2); cursor:pointer; user-select:none;
+}
+.toggle input{
+  appearance:none; width:44px; height:26px; border-radius:13px;
+  background:var(--surface-2); position:relative; cursor:pointer;
+  transition:background .2s; flex:0 0 auto; margin:0; border:none;
+}
+.toggle input::after{
+  content:""; position:absolute; top:3px; left:3px;
+  width:20px; height:20px; border-radius:50%; background:var(--paper);
+  box-shadow:0 1px 3px rgba(15,17,21,.28);
+  transition:transform .2s;
+}
+.toggle input:checked{ background:var(--ink); }
+.toggle input:checked::after{ transform:translateX(18px); }
+.toggle input:focus-visible{ outline:2px solid var(--ink); outline-offset:2px; }
+
+.btn{
+  width:100%; margin-top:22px;
+  background:var(--ink); color:#fff; border:none; border-radius:14px;
+  padding:17px; cursor:pointer;
+  font-family:inherit; font-size:var(--t-body); font-weight:650; letter-spacing:.01em;
+  transition:opacity .16s;
+}
+.btn:hover{ opacity:.88; }
+.btn:focus-visible{ outline:2px solid var(--ink); outline-offset:3px; }
+.btn.ghost{ background:var(--surface); color:var(--ink); }
+
+.fineprint{
+  margin-top:18px; font-size:var(--t-meta); line-height:1.7; color:var(--ink-2);
+}
+
+/* ---------- debrief ---------- */
+.debrief{
+  position:absolute; inset:0; z-index:22; background:var(--paper);
+  overflow-y:auto; padding:32px 24px 48px;
+  animation:rise .45s cubic-bezier(.2,.8,.25,1) both;
+}
+.debrief::-webkit-scrollbar{ width:0; }
+
+.dh{ border-bottom:1px solid var(--rule); padding-bottom:22px; }
+.dh .eyebrow{
+  font-family:var(--mono); font-size:var(--t-meta); letter-spacing:.14em;
+  color:var(--ink-2); margin-bottom:12px;
+}
+.dh .arche{
+  font-size:var(--t-title); font-weight:700; line-height:1.04;
+  letter-spacing:-.03em; margin-bottom:12px; text-wrap:balance;
+}
+.dh .adesc{ font-size:var(--t-detail); line-height:1.6; color:var(--ink-2); }
+.dh .who2{
+  font-family:var(--mono); font-size:var(--t-meta); letter-spacing:.06em;
+  color:var(--ink-2); margin-top:14px;
+}
+
+.axes{ margin-top:26px; display:flex; flex-direction:column; gap:18px; }
+.axis .aline{
+  display:flex; justify-content:space-between; align-items:baseline;
+  font-size:var(--t-detail); margin-bottom:8px;
+}
+.axis .aline .nm{ color:var(--ink); font-weight:650; letter-spacing:.04em; }
+.axis .aline .vl{
+  color:var(--ink-2); font-family:var(--mono);
+  font-variant-numeric:tabular-nums;
+}
+.axis .track{ height:6px; background:var(--surface-2); border-radius:3px; overflow:hidden; }
+.axis .track i{
+  display:block; height:100%; border-radius:3px; background:var(--ink);
+  transform-origin:left; animation:grow 1s cubic-bezier(.2,.8,.25,1) both;
+}
+.axis .track i.low{ background:var(--urgent); }
+.axis .track i.high{ background:var(--good); }
+@keyframes grow{ from{ transform:scaleX(0);} to{ transform:scaleX(1);} }
+.axis .gloss{ margin-top:8px; font-size:var(--t-detail); line-height:1.5; color:var(--ink-2); }
+
+.sect{ margin-top:34px; }
+.sect > h3{
+  font-family:var(--mono); font-size:var(--t-meta); letter-spacing:.14em;
+  color:var(--ink-2); margin:0 0 14px; font-weight:700;
+}
+
+.reveal{ background:var(--surface); border-radius:14px; padding:18px; }
+.reveal p{ font-size:var(--t-detail); line-height:1.65; color:var(--ink-2); margin:0 0 12px; }
+.reveal p:last-child{ margin-bottom:0; }
+.reveal p b{ color:var(--ink); font-weight:650; }
+
+.log{ display:flex; flex-direction:column; gap:12px; }
+.entry{ border:1px solid var(--rule); border-radius:12px; padding:14px 16px; }
+.entry .etop{
+  font-family:var(--mono); font-size:var(--t-meta); letter-spacing:.06em;
+  color:var(--ink-2); margin-bottom:8px;
+  display:flex; justify-content:space-between; gap:12px;
+}
+.entry .etop .mark{ font-weight:700; }
+.entry .etop .mark.g{ color:var(--good); }
+.entry .etop .mark.b{ color:var(--urgent); }
+.entry .etop .mark.m{ color:var(--ink); }
+.entry .ch{ font-size:var(--t-detail); font-weight:650; line-height:1.45; margin-bottom:9px; }
+.entry .nt{
+  font-size:var(--t-detail); line-height:1.6; color:var(--ink-2);
+  border-top:1px solid var(--rule); padding-top:9px;
+}
+.entry .nt b{ color:var(--ink); font-weight:650; }
+
+.codebox{
+  margin-top:12px; background:var(--surface); border-radius:12px; padding:14px;
+  font-family:var(--mono); font-size:var(--t-detail); line-height:1.7;
+  color:var(--ink-2); word-break:break-word;
+  font-variant-numeric:tabular-nums;
+}
+.codebox b{ color:var(--ink); font-weight:700; }
+
+@media (prefers-reduced-motion: reduce){
+  *{ animation-duration:.001s !important; transition-duration:.001s !important; }
+  .thread{ scroll-behavior:auto; }
+}
+</style>
+
+<div class="room"></div>
+
+<div class="stage">
+  <div class="device">
+
+    <div class="statusbar">
+      <span class="brand"><b>◆</b> THE SCIENTISTS' RECORD &nbsp;/&nbsp; SOCIAL DESK</span>
+      <span id="clockLabel">02:47</span>
+    </div>
+
+    <div class="rail" id="rail" aria-hidden="true">
+      <div class="seg"><i></i></div>
+      <div class="seg"><i></i></div>
+      <div class="seg"><i></i></div>
+      <div class="seg"><i></i></div>
+    </div>
+
+    <div class="thread" id="thread" role="log" aria-live="polite" aria-label="Incoming messages"></div>
+
+    <div id="sheetHost"></div>
+
+    <!-- ================= LOBBY ================= -->
+    <div class="lobby" id="lobby">
+      <div class="lockclock">02:47</div>
+      <div class="lockdate">THURSDAY &nbsp;·&nbsp; 12 MARCH</div>
+
+      <button class="alertcard" id="openAlert">
+        <div class="ahead"><span>◆ THE SCIENTISTS' RECORD · NEWS DESK</span><span>now</span></div>
+        <div class="atitle">John is calling. Two missed.</div>
+        <div class="abody">"Are you up? Jane H Rose has tagged us and it's already moving."</div>
+        <div class="atap">TAP TO OPEN &nbsp;›</div>
+      </button>
+
+      <div class="brief" id="brief" hidden>
+        <div class="eyebrow">A CRISIS SIMULATION FOR SCIENCE JOURNALISTS</div>
+        <h1>BACKLASH</h1>
+        <div class="tag">10 DECISIONS &nbsp;·&nbsp; ~20 MINUTES &nbsp;·&nbsp; NO UNDO</div>
+
+        <div class="situation">
+          <div class="sit">
+            <b>You run the feed.</b>
+            You're the social media manager for <b>The Scientists' Record</b>, a major science publication. You post what goes out — but you answer to a chain of editors above you: the Chief Editor, the News Editor and the Digital Editor.
+          </div>
+          <div class="sit">
+            <b>At 2:47am, you've been tagged.</b>
+            A high-profile blogger, Jane H Rose — 200,000 followers — has replied to your interview with JJ Hughes, calling him a bully who made her life hell for years as her PhD supervisor. The reply already has 500 likes and 250 reshares, and it's climbing.
+          </div>
+          <div class="sit">
+            <b>Nothing you do tonight is free.</b>
+            Every option costs something — speed, trust, or control of the story. Whatever you decide, the editors above you will have feelings about it by morning.
+          </div>
+        </div>
+
+        <p><b>It is 02:47 and you are the one who has to answer this.</b></p>
+
+        <dl class="roleslab">
+          <dt>YOUR ROLE</dt>
+          <dd>Social Media Manager, <b>The Scientists' Record</b> — a major science publication. You run the official accounts tonight and report to a team of editors: Chief Editor, News Editor and Digital Editor.</dd>
+          <dt>WHAT IS BEING MEASURED</dt>
+          <dd>Rigour, tempo, trust and nerve. You will not see your scores while you play — only whether something moved. That is deliberate.</dd>
+          <dt>THE RULE</dt>
+          <dd>The clock does not stop. If you do not decide, the story decides without you — and that counts as a decision.</dd>
+        </dl>
+
+        <div class="field">
+          <label for="playerName">NAME OR TEAM — FOR THE DEBRIEF</label>
+          <input id="playerName" maxlength="28" placeholder="e.g. Table 4 / Anjali" autocomplete="off">
+        </div>
+
+        <label class="toggle">
+          <input type="checkbox" id="untimed">
+          <span>Untimed mode — for facilitated table discussion</span>
+        </label>
+
+        <button class="btn" id="startBtn">TAKE THE CALL</button>
+
+        <div class="fineprint">
+          Entirely fictional. The Scientists' Record, Jane H Rose, JJ Hughes and every named person and institution in this simulation are invented. Any resemblance to a real outlet, blogger or individual is unintended.
+        </div>
+      </div>
+
+      <div class="spacer"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+"use strict";
+
+/* ============================================================
+   CAST
+   ============================================================ */
+const CAST = {
+  john:    { n:"John",              r:"Junior News Editor",             i:"JN", c:"#7BD88F" },
+  newsed:  { n:"Senior News Editor", r:"News desk",                     i:"SN", c:"#FFB020" },
+  digital: { n:"Digital Editor",    r:"Digital & social strategy",      i:"DE", c:"#3FD9C0" },
+  chief:   { n:"Chief Editor",      r:"Final sign-off on everything published", i:"CE", c:"#FF4A38" },
+  priya:   { n:"Priya Raghunathan", r:"Our reporter in Delhi",       i:"PR", c:"#7BD88F" },
+  marcus:  { n:"Marcus Oyelaran",   r:"Climate editor",   i:"MO", c:"#FFB020" },
+  dana:    { n:"Dana Whitlock",     r:"Editor-in-Chief",                i:"DW", c:"#FF4A38" },
+  tobi:    { n:"Tobi Arendt",       r:"Audience editor",         i:"TA", c:"#3FD9C0" },
+  legal:   { n:"S. Kaur",           r:"Legal",                          i:"SK", c:"#8E93F5" },
+  voss:    { n:"Ilya Voss",         r:"Founder, Kestrel Climate",       i:"IV", c:"#C0C8D4" },
+  hallam:  { n:"Dr Esme Hallam",   r:"Lead author of the paper",  i:"EH", c:"#F5A9C8" },
+  chandra: { n:"Prof. R. Chandrasekhar", r:"Atmospheric physicist", i:"RC", c:"#6FB6FF" },
+  ops:     { n:"Night desk",        r:"automated",                      i:"◆",  c:"#4A5666" }
+};
+
+/* ============================================================
+   SCENARIO — a fixed spine of ten injects.
+   Everyone in the room sees the same events; only the responses
+   diverge. That is what makes the group debrief possible.
+   ============================================================ */
+const ROUNDS = [
+
+/* ---------- ACT I — THE ALERT ---------- */
+{
+  id:1, act:"ACT I — THE ALERT", clock:"02:47", secs:60,
+  injects:[
+    {t:"msg", who:"john", lines:[
+      "You're needed.",
+      "We've just been tagged by the blogger Jane H Rose — it's moving fast."
+    ]},
+    {t:"post", who:"Jane H Rose", handle:"@janehrose", v:true, c:"#B98CE0", i:"JHR",
+     text:"@the-scientists-record I can't believe you're platforming JJ Hughes – he is a bully who made my life hell for years as my PhD supervisor.",
+     eng:[["LIKES","500"],["RESHARES","250"]]},
+    {t:"sys", text:"Rose has a following of <b>200,000</b> on this platform. The post is in reply to an article you posted of an interview with JJ Hughes."}
+  ],
+  prompt:"THE TAG",
+  q:"What do you do?",
+  options:[
+    { k:"A", label:"Delete and escalate.",
+      detail:"Time is of the essence. Delete the social post from @the-scientists-record and message the news editor who posted the story to ask them to take it down while you investigate.",
+      s:{rigor:-1, tempo:+3, trust:-3, nerve:-1}, flags:["deletedandescalated"],
+      out:[{t:"you", text:"Delete the post, and ask the news editor to pull the story while we look into it."},
+           {t:"sys", text:"The junior news editor, in a panic, takes the story down."},
+           {t:"msg", who:"newsed", lines:["What have you done?! Now Rose and her followers are accusing us of being cowards who are part of a cover-up"]},
+           {t:"post", who:"Jane H Rose", handle:"@janehrose", v:true, c:"#B98CE0", i:"JHR",
+            text:"I see the interview with that scumbag and the post have been deleted. Call this transparent journalism? You should be ashamed of yourself @the-scientists-record.",
+            eng:[["REPLIES","1000+"],["RESHARES","2000+"]]},
+           {t:"msg", who:"chief", lines:["I need to speak to you urgently, we've messed up massively here"]}],
+      note:"Deleting a post is reversible. Asking someone else to pull a published story at 3am under panic is not — you didn't just act fast, you handed the fastest, least-considered version of this decision to the person least equipped to make it calmly."
+    },
+    { k:"B", label:"Delete and move on.",
+      detail:"Delete the post but don't worry about the story for now, that's a problem for the editor.",
+      s:{rigor:-2, tempo:+2, trust:-3, nerve:-2}, flags:["deletedonly"],
+      out:[{t:"you", text:"Delete the post. The article's not my call."},
+           {t:"msg", who:"digital", lines:["What have you done?! Now Rose and her followers are accusing us of being cowards who delete posts slyly and asking why we won't issue a proper apology"]},
+           {t:"post", who:"Jane H Rose", handle:"@janehrose", v:true, c:"#B98CE0", i:"JHR",
+            text:"I see that the post has been deleted. But the interview remains online. Call this transparent journalism? You should be ashamed of yourself @the-scientists-record.",
+            eng:[["REPLIES","1000+"],["RESHARES","2000+"]]},
+           {t:"msg", who:"chief", lines:["I need to speak to you urgently, we've messed up massively here"]}],
+      note:"A deletion with no plan behind it reads as exactly what it was: damage control with nobody driving. Quietly removing one artefact while the thing it was replying to stays up doesn't look like transparency — it looks like what Rose called it."
+    },
+    { k:"C", label:"Wait it out.",
+      detail:"Take no action yet, this could blow over and you don't want to add fuel to the fire by giving it attention.",
+      s:{rigor:0, tempo:-3, trust:-2, nerve:-2}, flags:["froze"],
+      out:[{t:"you", text:"Leave it. It'll probably blow over."},
+           {t:"sys", text:"You fall back asleep for a while and wake up at 6am to 25 messages and 10 missed calls."},
+           {t:"msg", who:"digital", lines:["are you there?! I really need you on this!"]},
+           {t:"msg", who:"newsed", lines:["I assume you've seen this post from Rose – how should we respond?!"]},
+           {t:"msg", who:"chief", lines:["I had hoped to hear about this sooner – I see it's been up for hours and John said he told you about it earlier"]}],
+      note:"Nothing about this cooled down while you slept — it just ran for three hours with nobody steering it. By six, the question isn't what you'll decide, it's why it took you this long to be reachable."
+    },
+    { k:"D", label:"Watch it, and loop in the desk.",
+      detail:"Leave the post and article up, compose a message to relevant editors telling them you're aware of the situation and keeping an eye on it.",
+      s:{rigor:+2, tempo:+1, trust:+2, nerve:+1}, flags:["monitored"],
+      out:[{t:"you", text:"Leave it up, keep watching, and get the editors looped in now rather than after it's bigger."},
+           {t:"sys", text:"You set up some extra alerts and keep the thread open, watching the responses roll in."},
+           {t:"sys", text:"You send an email to the digital editor, senior news editor and chief editor telling them the situation. You'll have to decide together on the next steps."}],
+      note:"No single irreversible action, and no one finding out about this from someone else first. You've bought yourself the thing that actually matters at 3am: options, and editors who aren't blindsided."
+    }
+  ],
+  timeoutOpt:{ label:"No reply went out.",
+    s:{rigor:0, tempo:-3, trust:-2, nerve:-1}, flags:["timedout1"],
+    out:[{t:"msg", who:"john", lines:["I didn't hear back from you, so I've taken the post down and apologised publicly myself.","I hope that was the right call — I genuinely wasn't sure."]}],
+    note:"The decision didn't wait for you. It just got made by whoever was still awake, with whatever judgement they had at 3am — which is now your publication's position, whether you'd have chosen it or not."
+  }
+},
+
+{
+  id:2, act:"ACT I — THE ALERT", clock:"03:15", secs:60,
+  injects:[
+    {t:"msg", who:"digital", lines:[
+      "Rose's post is still up, of course. And we're getting a lot of flack for platforming a bully.",
+      "The worst thing is, I've just seen someone tag our boss and say that he's the most notorious bully of all. Here's the msg – I think we should forward it to the boss straight away. Do you agree?"
+    ]}
+  ],
+  prompt:"THE ESCALATION",
+  q:"What do you do?",
+  options:[
+    { k:"A", label:"Let it ride.",
+      detail:"This doesn't seem like something the boss needs to worry about – the post only has a dozen likes so far, it should blow over soon.",
+      s:{rigor:-2, tempo:-1, trust:-3, nerve:-1}, flags:["ignoredboss"],
+      out:[{t:"you", text:"Leave the boss out of it for now — this one's small."},
+           {t:"sys", text:"You ignore the problem post. It doesn't blow over, but instead gets picked up by a reporter at a rival outlet, who calls your boss directly for comment. The boss is blindsided and unimpressed."}],
+      note:"A dozen likes at 3am is not a ceiling, it's a snapshot. The thing you decided wasn't worth flagging is the thing your boss found out about from a rival's reporter — a worse way for him to hear it than any version of you telling him."
+    },
+    { k:"B", label:"Forward it, no comment.",
+      detail:"This could get out of hand quickly – send the message to the boss, in the interest of time, just forward it without comment.",
+      s:{rigor:0, tempo:+1, trust:-2, nerve:-1}, flags:["forwardedsilent"],
+      out:[{t:"you", text:"Forward it straight through, no note attached — fastest way to get it in front of him."},
+           {t:"sys", text:"The boss misses the message because you sent it without any fanfare. It gets picked up by a reporter at a rival outlet, who calls your boss directly for comment. The boss is blindsided and unimpressed."}],
+      note:"Forwarding something is not the same as flagging it. A message with no framing competes with everything else in an inbox at 3am, and this one lost — your boss still found out from a reporter, not from you."
+    },
+    { k:"C", label:"Forward and push him to respond.",
+      detail:"Forward the message to the boss, advising that they get out in front of it by replying asap.",
+      s:{rigor:0, tempo:+2, trust:-2, nerve:+1}, flags:["advisedrespond"],
+      out:[{t:"you", text:"Forward it now, and tell him to get ahead of this by replying himself, fast."},
+           {t:"sys", text:"The boss replies, as per your suggestion. In the heat of the moment he comes across as arrogant and dismissive, adding fuel to the fire of the bullying rumours."}],
+      note:"Getting out in front of a story is good advice in general and terrible advice for someone who is personally implicated, half-awake, and hasn't seen the full thread. Speed was the right instinct pointed at the wrong person."
+    },
+    { k:"D", label:"Forward and advise he waits.",
+      detail:"Forward the message to the boss – they need to know what's happening. But advise them not to respond for now.",
+      s:{rigor:+2, tempo:+1, trust:+3, nerve:+2}, flags:["advisedhold"],
+      out:[{t:"you", text:"He needs to see this — but I'm advising him to hold off responding until we know more."},
+           {t:"sys", text:"The boss thanks you for your diligent advice and holds fire for now."}],
+      note:"Keeping someone informed and keeping them quiet are two different favours, and this is the one decision tonight that did both — told the person who needed to know, without putting him on the record before anyone understood what was happening."
+    }
+  ],
+  timeoutOpt:{ label:"The message sat unanswered.",
+    s:{rigor:0, tempo:-2, trust:-2, nerve:-1}, flags:["timedout2"],
+    out:[{t:"msg", who:"digital", lines:["I didn't hear back, so I forwarded it to him myself.","No idea what he's going to do with it."]}],
+    note:"The digital editor didn't wait for a steer, and now the boss has the message with no advice attached at all — the version of this where it's least clear whether to respond, and most likely someone hits reply too fast."
+  }
+},
+
+{
+  id:3, act:"ACT I — THE ALERT", clock:"04:58", secs:55,
+  injects:[
+    {t:"msg", who:"marcus", lines:[
+      "Full piece is written and lawyered. Everything in it is defensible.",
+      "The only thing left is the headline, and you know as well as I do that the headline is 90% of what happens next."
+    ]},
+    {t:"sys", text:"Established as fact so far: Kestrel ran <b>unauthorised</b> injections. The monsoon failed catastrophically. A weak preprint asserts a causal link. <b>No independent group has replicated or assessed it.</b>"}
+  ],
+  prompt:"THE HEADLINE",
+  q:"Four headlines. All four are technically defensible. Choose.",
+  options:[
+    { k:"A", label:"“Did a Silicon Valley Startup Break the Monsoon?”",
+      detail:"A question, so strictly speaking it asserts nothing.",
+      s:{rigor:-3, tempo:+2, trust:-2, nerve:-1}, flags:["betteridge"],
+      out:[{t:"you", text:"Go with the question headline."},
+           {t:"msg", who:"marcus", lines:["A question mark is not a hedge. It's a claim with deniability attached.","We both know readers answer the question in the direction it's pointed."]}],
+      note:"The interrogative dodge. A question headline lets an outlet plant a claim while retaining the defence that it asserted nothing — <b>readers reliably resolve the question in the direction it leans</b>, and the outlet keeps the traffic without owning the assertion."
+    },
+    { k:"B", label:"“Unauthorised Geoengineering Flights Confirmed as Monsoon Fails; Link Unproven”",
+      detail:"Two established facts and the honest status of the thing joining them.",
+      s:{rigor:+3, tempo:+1, trust:+2, nerve:+1}, flags:["goodhead"],
+      out:[{t:"you", text:"B. Facts first, then the honest status of the link."},
+           {t:"msg", who:"marcus", lines:["It's clunky and it's correct.","Tobi will tell you it underperforms by 60%. Tobi will be right. It'll also still be standing in a month."]}],
+      note:"Structurally honest: two verified facts, and the relationship between them labelled as unproven. It <b>will</b> underperform — that is the real trade being made, and it should be made with open eyes rather than pretended away."
+    },
+    { k:"C", label:"“Scientists Link Geoengineering Venture to Monsoon Collapse”",
+      detail:"Accurate — scientists did make that link. We're reporting the existence of the claim.",
+      s:{rigor:-2, tempo:+2, trust:0, nerve:-1}, flags:["scientistssay"],
+      out:[{t:"you", text:"C. We're accurately reporting that the claim was made."},
+           {t:"msg", who:"marcus", lines:["'Scientists Link' is the most load-bearing phrase in our industry.","Three people at one university becomes 'scientists.' A weak regression becomes 'link.' Every word is true and the sentence is false."]}],
+      note:"The most common construction in science journalism, and the most quietly corrosive. <b>Attributing a claim accurately is not the same as conveying its evidentiary weight.</b> “Scientists link” flattens three authors and one unreviewed regression into the voice of a field."
+    },
+    { k:"D", label:"“The Monsoon Failed. A Startup Was Spraying the Stratosphere. What We Actually Know.”",
+      detail:"Lead with the two facts as separate facts. Make knowledge status the promise of the piece.",
+      s:{rigor:+2, tempo:+3, trust:+2, nerve:+1}, flags:["goodhead","strongframe"],
+      out:[{t:"you", text:"D. Two facts, deliberately not joined, and the piece promises to sort out which is which."},
+           {t:"msg", who:"tobi", lines:["That'll actually travel. Curiosity gap without a false promise.","I can work with this. First honest headline tonight I haven't had to argue about."]}],
+      note:"The rare headline that is both rigorous and shareable — it earns attention with a <b>real</b> curiosity gap rather than an implied causal claim, and the audience lead can defend it. Accuracy and reach are not always opposed; they just usually require more drafts."
+    }
+  ],
+  timeoutOpt:{ label:"The sub-editor picked one.",
+    s:{rigor:-2, tempo:0, trust:-1, nerve:-1}, flags:["subpicked"],
+    out:[{t:"msg", who:"marcus", lines:["The overnight sub went with 'Scientists Link Geoengineering Venture to Monsoon Collapse.'","It's live. It's had 200,000 views. I wouldn't have chosen it."]}],
+    note:"Headlines default to whoever is still awake. In the absence of an editorial decision, the <b>most conventional and most causal</b> option wins by default — that is what the house style optimises for."
+  }
+},
+
+/* ---------- ACT II — THE AMPLIFICATION ---------- */
+{
+  id:4, act:"ACT II — THE AMPLIFICATION", clock:"09:12", secs:55,
+  injects:[
+    {t:"wire", prio:"FLASH", src:"GOVERNMENT AFFAIRS", hed:"Minister for Earth Sciences calls injections “an act of atmospheric trespass against 190 million people”",
+     sub:"Statement posted 09:04. Prime Minister's Office confirms an emergency review of foreign-operated atmospheric activity. Kestrel's leasing partner has suspended operations."},
+    {t:"post", who:"Kavitha Menon", handle:"@MinEarthSci_GoI_", v:true, c:"#FF9F45", i:"KM",
+     text:"A foreign company sprayed our sky without asking. Our farmers paid for it. The science is now clear and India will act.",
+     eng:[["QUOTES","310K"],["REPOSTS","1.4M"],["VIEWS","61M"]]},
+    {t:"msg", who:"priya", lines:[
+      "This is now the biggest story in the country. It's on every channel.",
+      "NDTV-equivalent want you live in 40 minutes. Not Marcus — you. They want 'the editor who's been across it since 3am.'",
+      "Also: the minister said 'the science is now clear.' It isn't. She's citing us."
+    ]}
+  ],
+  prompt:"THE AMPLIFIER",
+  q:"A minister has just described your reporting as settled science. You are booked for live television in forty minutes.",
+  options:[
+    { k:"A", label:"Go live. Correct the minister on air.",
+      detail:"Say plainly: the flights are confirmed, the causal link is not, and no one should be legislating off a preprint.",
+      s:{rigor:+1, tempo:+2, trust:+2, nerve:+3}, flags:["correctedminister"],
+      out:[{t:"you", text:"I'll do it. And I'm going to say the causal claim isn't established, on their air, to their audience."},
+           {t:"msg", who:"priya", lines:["You did it. Anchor did not enjoy it.","You said 'the flights are proven, the link is not, and I'd ask everyone to hold those apart.' It's being clipped both ways — but the science community clip is running further."]},
+           {t:"msg", who:"chandra", lines:["I don't know you, but I watched that. Thank you.","I've been trying to say this for six hours and nobody wanted the boring version. I'll go on record with you whenever you want."]}],
+      note:"The highest-difficulty move in the simulation. Correcting a powerful amplifier <b>in their own venue</b>, against the run of play, is where independence is actually tested — and it earned you a serious source who was watching for exactly that signal."
+    },
+    { k:"B", label:"Go live. Stick to what you published, don't pick a fight.",
+      detail:"Restate the reporting, decline to characterise the minister's remarks. Don't become the story.",
+      s:{rigor:0, tempo:+2, trust:+1, nerve:-1}, flags:["wentlive"],
+      out:[{t:"you", text:"I'll do it, but I'm not going to get into a fight with a minister on live television."},
+           {t:"msg", who:"priya", lines:["It was fine. Careful.","The clip they've cut is you nodding while the anchor says 'so the science is clear.' You didn't say it. You're in the frame while it was said."]}],
+      note:"Declining to correct an overreach in your presence transfers your authority to it. <b>Standing beside a false statement is a form of endorsement</b> that no transcript will ever record and every clip will."
+    },
+    { k:"C", label:"Decline the hit. Publish a precise clarification instead.",
+      detail:"Written, on your own platform, where every word is yours and nothing can be edited into a clip.",
+      s:{rigor:+2, tempo:-1, trust:+1, nerve:-1}, flags:["clarified"],
+      out:[{t:"you", text:"No TV. We publish a clarification where I control every word and nobody can cut it."},
+           {t:"article", kicker:"THE MERIDIAN · EDITOR'S NOTE", h:"On the Minister's Remarks: What Our Reporting Does and Does Not Establish",
+            p:"The unauthorised flights are confirmed. The causal link to this year's monsoon is not. We do not believe policy should be made on the strength of an unreviewed preprint."},
+           {t:"msg", who:"tobi", lines:["Clean. Precise. 11,000 readers.","The clip you turned down would have reached about nine million."]}],
+      note:"Control versus reach, stated as a plain trade. The clarification is unimpeachable and it is <b>reaching almost nobody relative to the error</b>. Corrections that only exist where the error didn't are a structural weakness of the whole trade."
+    },
+    { k:"D", label:"Send Marcus instead. He's the subject expert.",
+      detail:"Better on the science, and it keeps the editor out of the political crossfire.",
+      s:{rigor:+1, tempo:+1, trust:0, nerve:-2}, flags:["sentmarcus"],
+      out:[{t:"you", text:"Send Marcus. He knows the atmospheric science cold."},
+           {t:"msg", who:"marcus", lines:["I'll do it, but be honest with yourself about why.","They asked for the editor because they want someone who can be held responsible. You've sent someone who can only be held expert."]}],
+      note:"A reasonable-sounding delegation that Marcus correctly reads as risk transfer. <b>Editorial responsibility does not delegate</b> — the decision to publish was yours, and answering for it was the ask."
+    }
+  ],
+  timeoutOpt:{ label:"Forty minutes passed.",
+    s:{rigor:0, tempo:-2, trust:-2, nerve:-2}, flags:["duckedtv"],
+    out:[{t:"msg", who:"priya", lines:["They went with the Beacon's deputy instead.","She said the science was clear. On the record. Citing our headline."]}],
+    note:"The seat does not stay empty. Declining to appear does not remove the argument from the air — <b>it removes you from it</b>, and your reporting gets characterised by someone with less reason to be careful."
+  }
+},
+
+{
+  id:5, act:"ACT II — THE AMPLIFICATION", clock:"11:40", secs:60,
+  injects:[
+    {t:"msg", who:"hallam", lines:[
+      "You emailed me at 3am. I'm sorry — I've been in a room with our press office all morning.",
+      "I need to tell you something and I would rather tell you than the Beacon.",
+      "Our press release overstated the paper. Badly. I did not approve the headline on it and I have asked twice for it to be withdrawn. The paper says our result is 'consistent with' a suppression effect. It does not say 'caused'. It cannot say caused. We have one season."
+    ], att:"<b>ATTACHED</b> · hallam_original_draft_v4.pdf<br>Abstract as submitted, before comms edits.<br>The word “caused” does not appear."},
+    {t:"msg", who:"hallam", lines:[
+      "I'll say all of that on the record if you want it. My co-author will not. And I think it may end my association with the department.",
+      "Please be careful with it. But please use it."
+    ]}
+  ],
+  prompt:"THE RETRACTION THAT ISN'T",
+  q:"The paper's own senior author is handing you the story that dismantles the story you've been running all night.",
+  options:[
+    { k:"A", label:"Run it now, on the record, as the lead.",
+      detail:"“Author of monsoon study says her own university's press release overstated the findings.” Protect her where you can.",
+      s:{rigor:+3, tempo:+3, trust:+3, nerve:+3}, flags:["ranhallam"],
+      out:[{t:"you", text:"We run it as the lead. And Marcus — call her back and walk her through exactly what going on record will mean for her before we publish a word."},
+           {t:"article", kicker:"THE MERIDIAN · EXCLUSIVE", h:"“It Cannot Say Caused”: Author of Monsoon Study Says Her University Overstated It",
+            p:"Dr Esme Hallam, senior author of the preprint that triggered a diplomatic incident, says the press release announcing her work made a causal claim her paper does not support."},
+           {t:"msg", who:"marcus", lines:["Beacon are now three hours behind on a story they broke.","And we did it by reporting against our own coverage. I've been here nineteen years and I've seen that maybe four times."]}],
+      note:"The best decision available in the entire simulation. It is fast, it is rigorous, it costs you the story you had, and it treats a vulnerable source as a person with consequences rather than a quote. <b>Reporting against your own coverage is the rarest and most valuable thing a masthead can do.</b>"
+    },
+    { k:"B", label:"Hold it. Verify the draft's provenance first.",
+      detail:"Confirm the attached PDF is genuine and get a second author on the record before publishing something this consequential.",
+      s:{rigor:+2, tempo:-1, trust:0, nerve:0}, flags:["verifiedhallam"],
+      out:[{t:"you", text:"Verify the PDF metadata and try the second author. I'm not publishing a document I can't authenticate, even one that helps us."},
+           {t:"msg", who:"marcus", lines:["Right call in principle. Metadata checks out, took two hours.","In those two hours the minister announced a formal inquiry. The correction is now landing into a much harder wall than it would have at noon."]}],
+      note:"Verification discipline applied consistently — including to evidence that <b>flatters your judgement</b>, which is exactly when it's hardest to apply. The cost is real: corrections decay in value by the hour, and this one aged into a policy announcement."
+    },
+    { k:"C", label:"Use it as background only. Soften the existing piece.",
+      detail:"Quietly add hedging to the original article. Don't make a spectacle of the reversal.",
+      s:{rigor:-1, tempo:0, trust:-3, nerve:-3}, flags:["softened"],
+      out:[{t:"you", text:"Background only. Let's just tighten the language in the original piece."},
+           {t:"msg", who:"hallam", lines:["I've just read your updated article.","I gave you a document and my career and you used it to edit an adjective. Please don't contact me again."]}],
+      note:"You received an on-the-record account from the most authoritative possible source and converted it into a silent edit. This <b>burns the source permanently</b>, hides the correction from everyone who read the original, and protects only your own record."
+    },
+    { k:"D", label:"Sit on it for the weekend read.",
+      detail:"It's a much bigger piece with time, reporting and a proper interview. Do it justice.",
+      s:{rigor:+1, tempo:-3, trust:-2, nerve:-1}, flags:["satonit"],
+      out:[{t:"you", text:"This is a weekend feature. Let's do it properly rather than dump it now."},
+           {t:"msg", who:"priya", lines:["The Beacon just published her. She went to them Thursday.","She told them she offered it to us first and we didn't move."]}],
+      note:"Craft ambition applied to a time-critical correction. A perfect Saturday feature that runs after the policy decision, the news cycle and the source's patience have all expired is worth <b>less than an adequate piece on Tuesday</b>."
+    }
+  ],
+  timeoutOpt:{ label:"You didn't reply.",
+    s:{rigor:-1, tempo:-3, trust:-3, nerve:-2}, flags:["ignoredhallam"],
+    out:[{t:"msg", who:"hallam", lines:["I understand. I'll take it elsewhere."]}],
+    note:"A senior author volunteering to correct her own paper is the highest-value inbound a science desk can receive. It went unanswered for an hour and <b>it will not come back</b>."
+  }
+},
+
+{
+  id:6, act:"ACT II — THE AMPLIFICATION", clock:"15:05", secs:55,
+  injects:[
+    {t:"msg", who:"voss", lines:[
+      "You've been more careful than the others. I'm told that's your reputation.",
+      "So: two hours, on the record, at the airstrip. Full flight logs, dispersal volumes, the internal modelling. Nobody else gets this.",
+      "One condition. You run my atmospheric physicist's response alongside, unedited, in full. Not summarised. Not 'according to Kestrel.' In full."
+    ]},
+    {t:"msg", who:"legal", lines:[
+      "Flagging: Kestrel's counsel has sent a pre-action letter to the Beacon this afternoon. Not to us. Yet.",
+      "Also flagging that agreeing to publish unedited copy supplied by a subject is not something we do, for reasons that are about to become obvious."
+    ]}
+  ],
+  prompt:"THE ACCESS TRADE",
+  q:"Genuine documentary evidence, offered in exchange for a condition on your editing.",
+  options:[
+    { k:"A", label:"Accept. The logs are worth it.",
+      detail:"Flight logs and dispersal volumes settle the physics question for good. Take the deal.",
+      s:{rigor:+1, tempo:+2, trust:-3, nerve:-3}, flags:["tookdeal"],
+      out:[{t:"you", text:"Take it. The logs are decisive and we can flag the arrangement to readers."},
+           {t:"msg", who:"legal", lines:["Noted. Against advice."]},
+           {t:"msg", who:"marcus", lines:["We now have the best evidence in the story and a 900-word unedited advertisement bolted to the bottom of it.","Every rival is going to write about the deal, not the logs."]}],
+      note:"Access-for-conditions. The evidence is real, which is what makes it seductive. But you have granted a subject <b>editorial control over part of your publication</b> — and the arrangement, not the finding, becomes the story others cover."
+    },
+    { k:"B", label:"Counter: full interview, no conditions, right of reply as normal.",
+      detail:"He wants to be understood more than he wants the clause. Test that.",
+      s:{rigor:+1, tempo:+1, trust:+2, nerve:+3}, flags:["countered"],
+      out:[{t:"you", text:"No conditions. You get a full, fair right of reply like anyone else, and I'll quote your physicist at length. That's the offer."},
+           {t:"msg", who:"voss", lines:["...Fine. Thursday. Bring someone who understands aerosol optical depth.","For the record I expected you to take the clause. Most do."]}],
+      note:"Correctly read. A subject demanding unedited space usually wants <b>not to be distorted</b> — an offer of genuine, generous, edited fairness satisfies the real need without surrendering control. Testing the condition cost one message."
+    },
+    { k:"C", label:"Decline. Report it out without him.",
+      detail:"We don't trade editorial control for access, and we say so publicly.",
+      s:{rigor:+1, tempo:-2, trust:+1, nerve:+2}, flags:["declinedvoss"],
+      out:[{t:"you", text:"Declined, and we'll note in the piece that we were offered access on conditions we don't accept."},
+           {t:"msg", who:"marcus", lines:["Clean. Also we now don't have the flight logs, and the flight logs are the only thing that actually settles the volume question.","Principle intact. Story weaker."]}],
+      note:"Defensible and expensive. Marcus names the trade honestly: the principle held, and the <b>one piece of evidence that could resolve the central factual dispute</b> went unexamined. Refusal has costs too, and they should be counted rather than assumed away."
+    },
+    { k:"D", label:"Accept, then renege on the unedited clause at publication.",
+      detail:"Get the logs, then edit as we see fit. He has no realistic recourse.",
+      s:{rigor:0, tempo:+1, trust:-3, nerve:-2}, flags:["reneged"],
+      out:[{t:"you", text:"Agree to it. We'll make our own call at publication."},
+           {t:"msg", who:"legal", lines:["Do not do this.","Beyond the ethics: he has the emails. Every rival will have them by Friday and the story becomes The Meridian's word being worthless."]}],
+      note:"Short-term gain against the only asset the trade actually runs on. <b>A masthead's word to sources is load-bearing infrastructure</b>; sources talk to each other, and the receipts of a broken agreement circulate faster than any scoop."
+    }
+  ],
+  timeoutOpt:{ label:"The offer lapsed.",
+    s:{rigor:0, tempo:-2, trust:-1, nerve:0}, flags:["lapsedvoss"],
+    out:[{t:"msg", who:"voss", lines:["I'll assume that's a no. The Beacon said yes in eleven minutes."]}],
+    note:"Access offers are perishable and competitive. The condition was negotiable — <b>nobody ever found out</b>, because the offer was allowed to expire unanswered."
+  }
+},
+
+{
+  id:7, act:"ACT II — THE AMPLIFICATION", clock:"18:33", secs:55,
+  injects:[
+    {t:"post", who:"Dr Nomsa Achebe", handle:"@n_achebe_atmos", v:false, c:"#B98CE0", i:"NA",
+     text:"Fourteen months ago The Meridian ran 3,000 admiring words on Ilya Voss headlined “The Man Who Might Cool the Planet.” No mention of consent, governance, or who gets to decide. They helped build him. Now they're covering him. [screenshots]",
+     eng:[["QUOTES","94K"],["REPOSTS","420K"],["VIEWS","19M"]]},
+    {t:"msg", who:"tobi", lines:[
+      "That thread is the second-biggest thing in the story now. Bigger than the Beacon's piece.",
+      "It's a fair hit. I've reread the profile. It's admiring, it's uncritical, and the governance question gets four words in paragraph 31."
+    ]},
+    {t:"msg", who:"dana", lines:[
+      "Just landed and I've been reading for an hour. I'm not going to second-guess your calls tonight.",
+      "But that profile is mine — I commissioned it. So whatever you decide here, decide it as an editor and not as someone protecting me."
+    ]}
+  ],
+  prompt:"YOUR OWN RECORD",
+  q:"Your publication helped build the man at the centre of this. The receipts are public.",
+  options:[
+    { k:"A", label:"Say nothing. It's a distraction from the story.",
+      detail:"Don't feed it. The reporting stands on its own merits.",
+      s:{rigor:0, tempo:0, trust:-3, nerve:0}, flags:["ignoredprofile"],
+      out:[{t:"you", text:"We're not engaging. It's a sideshow."},
+           {t:"msg", who:"tobi", lines:["It's not going away. It's now being cited in the ministry's briefing pack as evidence of 'Western media capture.'","Our silence is the story's fuel."]}],
+      note:"Institutional silence in the face of a fair criticism is read as a concession with an attitude. The critique <b>metastasised into a geopolitical talking point</b> in the vacuum where an answer should have been."
+    },
+    { k:"B", label:"Add an editor's note to the old profile linking to current coverage.",
+      detail:"Contextualise it honestly. Don't rewrite history, annotate it.",
+      s:{rigor:+2, tempo:+2, trust:+2, nerve:0}, flags:["editorsnote"],
+      out:[{t:"you", text:"Editor's note at the top of the profile. Dated, signed, links to tonight's reporting. Nothing gets deleted."},
+           {t:"article", kicker:"THE MERIDIAN · EDITOR'S NOTE, APPENDED", h:"The Man Who Might Cool the Planet",
+            p:"EDITOR'S NOTE, 14 SEPT: This profile was published in July last year. It did not adequately examine questions of consent and governance now central to reporting on Kestrel Climate. It remains available unaltered. Our current coverage is here."},
+           {t:"msg", who:"dana", lines:["That's the right instrument and it's properly dated. Good.","You'll notice it doesn't fully answer the criticism. It just stops us adding to it."]}],
+      note:"The correct minimum, executed properly: annotate, never rewrite, always date and sign. Dana is right that it is <b>defensive rather than accountable</b> — it stops the bleeding without examining the wound."
+    },
+    { k:"C", label:"Commission the accountability piece about your own coverage.",
+      detail:"Assign a reporter to examine how The Meridian covered Voss, with editorial cooperation and no veto.",
+      s:{rigor:+1, tempo:+1, trust:+3, nerve:+3}, flags:["selfaccount"],
+      out:[{t:"you", text:"Editor's note now. And I'm commissioning a piece on how we covered Voss — full access, no veto, Dana sits for an interview like any other subject."},
+           {t:"msg", who:"dana", lines:["...Yes. Do it.","I'd have understood if you hadn't. Most wouldn't. It's a genuinely unpleasant thing to sit for and I'll sit for it."]},
+           {t:"post", who:"Dr Nomsa Achebe", handle:"@n_achebe_atmos", v:false, c:"#B98CE0", i:"NA",
+            text:"Update: The Meridian has appended a dated note to the profile and commissioned an examination of their own coverage, with the commissioning editor sitting for interview. That is the correct response and I want to say so as loudly as I said the criticism.",
+            eng:[["QUOTES","12K"],["REPOSTS","180K"],["VIEWS","8.4M"]]}],
+      note:"The strongest institutional response available. Turning a fair criticism into <b>reported work with no internal veto</b> converts an attack into an asset — and it is the only move here that the original critic could publicly endorse."
+    },
+    { k:"D", label:"Quietly unpublish the profile.",
+      detail:"It's no longer defensible and the screenshots are doing damage. Take it down.",
+      s:{rigor:-2, tempo:0, trust:-3, nerve:-3}, flags:["unpublished"],
+      out:[{t:"you", text:"Pull it. It's indefensible and it's being weaponised."},
+           {t:"msg", who:"tobi", lines:["It's already archived in four places. The Wayback link is now doing 40,000 shares an hour.","'The Meridian has deleted its Voss profile' is a bigger story than the profile ever was."]},
+           {t:"msg", who:"dana", lines:["Put it back up. Right now.","We do not disappear our own record. That's the one thing we genuinely cannot do."]}],
+      note:"The trap, and the most realistic wrong answer in the simulation. <b>Unpublishing converts an old embarrassment into a live scandal</b> — nothing on the web is retractable, and the deletion is always more newsworthy than the thing deleted."
+    }
+  ],
+  timeoutOpt:{ label:"No response was given.",
+    s:{rigor:0, tempo:-2, trust:-3, nerve:-2}, flags:["ignoredprofile"],
+    out:[{t:"msg", who:"tobi", lines:["Three outlets have now written 'The Meridian declined to comment on its own previous coverage.'","That sentence is going to follow this story around for a year."]}],
+    note:"“Declined to comment” about your <b>own published work</b> is a uniquely damaging sentence, and it is what silence gets transcribed as."
+  }
+},
+
+/* ---------- ACT III — THE RECKONING ---------- */
+{
+  id:8, act:"ACT III — THE RECKONING", clock:"07:15 +2 DAYS", secs:65,
+  injects:[
+    {t:"wire", prio:"FLASH", src:"EMBARGOED — 07:00", hed:"Rapid-response consortium: monsoon failure “fully consistent with” record Indian Ocean Dipole; geoengineering signal “not detectable”",
+     sub:"Fourteen institutions across nine countries. Four independent modelling groups. Kestrel's total dispersal volume assessed at roughly 1/400th of the threshold required for a detectable monsoon effect."},
+    {t:"msg", who:"chandra", lines:[
+      "This is the analysis I told you was coming. I'm a co-author.",
+      "I want you to understand precisely what it says, because it will be misread in both directions within the hour.",
+      "Kestrel did something reckless, unauthorised and genuinely dangerous as a precedent. AND they almost certainly did not cause this monsoon. Both. At once. Neither cancels the other."
+    ]},
+    {t:"msg", who:"marcus", lines:[
+      "So the outrage was right and the causal claim was wrong.",
+      "That is the single hardest thing to publish in our entire trade."
+    ]}
+  ],
+  prompt:"THE DIVERGENCE",
+  q:"The moral story and the factual story have just come apart. How do you tell it?",
+  options:[
+    { k:"A", label:"Lead: the geoengineering claim collapses.",
+      detail:"The clearest, cleanest news line. The attribution failed and that's what's new.",
+      s:{rigor:+1, tempo:+3, trust:-2, nerve:0}, flags:["ledexoneration"],
+      out:[{t:"you", text:"Lead on the collapse of the causal claim. That's the news."},
+           {t:"article", kicker:"THE MERIDIAN", h:"Geoengineering Did Not Cause the Monsoon Failure, Major Analysis Finds",
+            p:"A fourteen-institution assessment finds no detectable link between Kestrel Climate's operations and this year's rainfall."},
+           {t:"msg", who:"chandra", lines:["Kestrel's press office has this on their front page within twenty minutes, framed as total vindication.","You've reported one true thing in a way that will be used to bury the other true thing. I did warn you."]}],
+      note:"Factually accurate, structurally misleading. <b>Leading with the exoneration collapses two findings into one</b>, and hands the framing to the party with the most resources to amplify it. Being right about the physics is not the same as being right about the story."
+    },
+    { k:"B", label:"Hold both findings in the lead, equally weighted.",
+      detail:"The flights were reckless and unauthorised. They did not cause this. Both, in the first sentence, neither subordinate.",
+      s:{rigor:+3, tempo:+2, trust:+3, nerve:+3}, flags:["heldboth"],
+      out:[{t:"you", text:"Both in the lead. Neither subordinated to the other. It'll be a harder sentence to write and it's the only honest one."},
+           {t:"article", kicker:"THE MERIDIAN", h:"Kestrel's Flights Were Reckless and Unauthorised. They Also Did Not Cause the Monsoon Failure.",
+            p:"A fourteen-institution rapid analysis attributes this year's collapse to a record Indian Ocean Dipole event, while the question of who may alter the atmosphere without consent remains entirely unresolved."},
+           {t:"msg", who:"chandra", lines:["That is exactly right and I did not expect anyone to do it.","You've kept the governance question alive while killing the causal one. Almost nobody managed that today."]}],
+      note:"The thesis of the whole simulation. Audiences and platforms both reward <b>collapsing a story into one direction</b>; holding two true things in tension in a single lead is the hardest and most valuable act in science journalism."
+    },
+    { k:"C", label:"Lead: the governance scandal is untouched by this.",
+      detail:"The real story was always consent and precedent, not this monsoon. Don't let the physics bury it.",
+      s:{rigor:-1, tempo:+1, trust:0, nerve:+2}, flags:["ledgovernance"],
+      out:[{t:"you", text:"Lead on governance. The causal claim was never the real story."},
+           {t:"msg", who:"marcus", lines:["I'm sympathetic and I think it's a dodge.","We spent two days putting the causal claim in front of millions of people. Leading with 'the real story was always something else' is how we avoid saying we got it wrong."]}],
+      note:"Pivoting to the defensible story to avoid correcting the indefensible one. Marcus names it exactly: <b>the causal claim was your coverage</b>, and reframing is not the same as correcting."
+    },
+    { k:"D", label:"Wait for peer review before reporting the rebuttal.",
+      detail:"We were burned by rushing an unreviewed preprint. Don't make the same mistake twice.",
+      s:{rigor:-2, tempo:-3, trust:-2, nerve:-1}, flags:["waitedagain"],
+      out:[{t:"you", text:"It's a rapid analysis, not a reviewed paper. We wait."},
+           {t:"msg", who:"chandra", lines:["You published a three-author preprint in four hours and you're holding a fourteen-institution multi-model assessment for peer review.","Whatever standard that is, it isn't consistency. It's just a standard that happens to protect your original story."]}],
+      note:"Asymmetric scepticism — the most insidious failure here, because it wears the costume of rigour. <b>A standard applied only to evidence that contradicts you is not a standard</b>, and Chandrasekhar's comparison is the one that should sting."
+    }
+  ],
+  timeoutOpt:{ label:"The embargo lifted without you.",
+    s:{rigor:-1, tempo:-3, trust:-2, nerve:-1}, flags:["missedembargo"],
+    out:[{t:"msg", who:"chandra", lines:["Everyone else has it. Most have led on 'geoengineering cleared.'","Kestrel is having an extremely good morning and the governance question has vanished from the coverage entirely."]}],
+    note:"Missing an embargo lift on the rebuttal to your own story is the worst possible timing failure — the frame was set by <b>outlets with no stake in the governance question</b>."
+  }
+},
+
+{
+  id:9, act:"ACT III — THE RECKONING", clock:"11:50 +2 DAYS", secs:55,
+  injects:[
+    {t:"msg", who:"dana", lines:[
+      "Now the part that actually matters.",
+      "Our original coverage reached about four million people. Whatever we do now reaches a fraction of that. That asymmetry is the central unsolved problem of this trade and I'd like to know how you want to attack it."
+    ]},
+    {t:"sys", text:"Reach ledger — original coverage: <b>4.1M</b> · alert push: <b>412K</b> · syndication partners: <b>31</b> · a standard correction notice historically reaches roughly <b>3%</b> of an original story's audience."}
+  ],
+  prompt:"THE CORRECTION",
+  q:"How loudly do you correct, relative to how loudly you broke it?",
+  options:[
+    { k:"A", label:"Standard correction note at the foot of the original.",
+      detail:"House style. It's what the policy specifies.",
+      s:{rigor:0, tempo:+1, trust:-2, nerve:-2}, flags:["footnote"],
+      out:[{t:"you", text:"Standard footer correction per policy."},
+           {t:"msg", who:"dana", lines:["Policy-compliant. 3% reach.","We told four million people something wrong and a hundred and twenty thousand of them will find out. You've satisfied the process and not the obligation."]}],
+      note:"Process compliance as a substitute for repair. The footer correction exists <b>primarily to protect the publisher's record</b>, not to reach the misinformed — which is why the reach gap persists industry-wide."
+    },
+    { k:"B", label:"Correct on every channel that carried the error, at equal prominence.",
+      detail:"Alert push, homepage lead, every social account, and a note to all 31 syndication partners.",
+      s:{rigor:+3, tempo:+3, trust:+3, nerve:+3}, flags:["symmetric"],
+      out:[{t:"you", text:"Symmetric correction. Every channel that carried it, same prominence, same push. Including the alert. Especially the alert."},
+           {t:"msg", who:"tobi", lines:["Second breaking alert this week and it's us correcting ourselves. That's unusual enough to be its own story.","Correction push open rate: 71%. Higher than the original."]},
+           {t:"msg", who:"dana", lines:["Write that up as policy. I'm serious — I want that as a standing rule by Friday."]}],
+      note:"Symmetric correction: the error's reach determines the correction's reach. Rarely done because it is <b>expensive and publicly humbling</b> — and, as Tobi's open rate shows, audiences reward the institution that does it rather than punishing it."
+    },
+    { k:"C", label:"A signed editor's piece on what went wrong and why.",
+      detail:"Not a correction notice — a considered account of the decision chain, under your byline.",
+      s:{rigor:0, tempo:0, trust:+2, nerve:+3}, flags:["signedaccount"],
+      out:[{t:"you", text:"I'll write it myself. What we knew at each hour, what we chose, and where I got it wrong."},
+           {t:"article", kicker:"THE MERIDIAN · FROM THE DEPUTY DIGITAL EDITOR", h:"We Had Four Hours and a Press Release. Here Is Every Decision I Made.",
+            p:"An hour-by-hour account of how this publication covered the Kestrel preprint, including the calls I would make differently."},
+           {t:"msg", who:"marcus", lines:["That's braver than a correction and it doesn't replace one.","Accountability journalism about ourselves is excellent. People who read the wrong headline still have the wrong headline."]}],
+      note:"Genuinely brave and incomplete on its own. Marcus draws the right distinction: a reckoning serves <b>the people who care about journalism</b>; a correction serves the people who were misinformed. They are different audiences and only one of them was harmed."
+    },
+    { k:"D", label:"Fold the correction into the new piece.",
+      detail:"The new reporting is the correction. It's cleaner than flagellating publicly.",
+      s:{rigor:-1, tempo:+1, trust:-2, nerve:-2}, flags:["foldedin"],
+      out:[{t:"you", text:"The new piece carries the correction implicitly. That's enough."},
+           {t:"msg", who:"dana", lines:["An implicit correction is not a correction. It's a hope.","Anyone who read the original and not the follow-up is still wrong, and they now have no way of finding out."]}],
+      note:"The implicit correction relies on the misinformed reader happening to return for the sequel. <b>Correction has to be pushed to where the error landed</b>, not left where the diligent might find it."
+    }
+  ],
+  timeoutOpt:{ label:"No correction was issued that day.",
+    s:{rigor:-2, tempo:-3, trust:-3, nerve:-2}, flags:["nocorrection"],
+    out:[{t:"msg", who:"dana", lines:["It's gone six. Nothing has gone out.","Every hour a correction is late, it reaches fewer people and costs more. Both curves are against you."]}],
+    note:"Correction decay is steep and it compounds. The <b>same words</b> published two days later reach a fraction of the audience and read as a forced concession rather than a volunteered one."
+  }
+},
+
+{
+  id:10, act:"ACT III — THE RECKONING", clock:"16:20 +2 DAYS", secs:60,
+  injects:[
+    {t:"post", who:"Sanyukt Kisan Morcha (regional)", handle:"@skm_regional_", v:false, c:"#7BD88F", i:"SK",
+     text:"Forty thousand of us marched today because a foreign company sprayed our sky and our crops failed. Now the same Western press that told us this is suddenly telling us it was 'the ocean.' We know what we saw. We know who benefits from this correction.",
+     eng:[["QUOTES","210K"],["REPOSTS","890K"],["VIEWS","44M"]]},
+    {t:"msg", who:"priya", lines:[
+      "I've been at the protest since this morning. I need you to hear this properly.",
+      "These people are not confused and they are not stupid. They lost a season. Someone did something to the sky without asking them. Both of those things are true and our correction reads to them like the correction is being made on Kestrel's behalf.",
+      "Whatever we publish next — it lands here. On these people. Not on the science desk."
+    ]},
+    {t:"msg", who:"dana", lines:["Your call. Last one."]}
+  ],
+  prompt:"WHO IT LANDS ON",
+  q:"The correction is scientifically right and it is being received as a betrayal. Final decision.",
+  options:[
+    { k:"A", label:"Restate the science more forcefully.",
+      detail:"The facts don't change based on who finds them inconvenient. Say it more clearly.",
+      s:{rigor:+1, tempo:+1, trust:-3, nerve:+1}, flags:["doubleddown"],
+      out:[{t:"you", text:"We restate the findings clearly and we don't soften for anybody."},
+           {t:"msg", who:"priya", lines:["It read as a lecture, because it was one.","Nobody here disputed the dipole. They disputed being told that the thing done to them doesn't count. You answered a question they weren't asking."]}],
+      note:"The information-deficit reflex: assume disagreement is misunderstanding and apply more facts. The dispute was <b>never about the dipole</b> — it was about whether their grievance survives the correction. Repetition cannot answer that."
+    },
+    { k:"B", label:"Report from the protest. Their grievance is the story now.",
+      detail:"Send Priya. The governance question, told by the people it was done to.",
+      s:{rigor:0, tempo:+2, trust:+3, nerve:+2}, flags:["reportedprotest"],
+      out:[{t:"you", text:"Priya — file from there. Not a reaction piece. The governance question told by the people it was done to."},
+           {t:"article", kicker:"THE MERIDIAN · REPORTING FROM THE FIELD", h:"“Nobody Asked Us.” The Monsoon Wasn't Their Doing — But the Sky Still Isn't Theirs.",
+            p:"The rainfall failed for reasons no company caused. The question of who may alter the atmosphere above 190 million people without their consent remains exactly as open as it was."},
+           {t:"msg", who:"priya", lines:["Thank you. Genuinely.","This is the first thing we've published in three days that treats them as participants rather than as an audience to be corrected."]}],
+      note:"Moving from correcting an audience to reporting a legitimate grievance. The scientific correction stands untouched — and the <b>real, unresolved governance story</b> is finally given to the people with the strongest claim on it."
+    },
+    { k:"C", label:"Publish a plain-language explainer in translation.",
+      detail:"Both findings, in the regional languages, distributed where the anger actually is.",
+      s:{rigor:+2, tempo:+2, trust:+2, nerve:+1}, flags:["translated"],
+      out:[{t:"you", text:"Both findings, plain language, translated, and pushed to the platforms it's actually spreading on. Not our homepage."},
+           {t:"msg", who:"priya", lines:["That's more than anyone else has done and it matters.","It's still us explaining to them. But it's in their language and it's on the platforms they use, which is more than the correction was."]}],
+      note:"Meeting the audience where the error actually spread, in the language it spread in — a serious and rarely-resourced move. Priya's caveat is the useful one: <b>explanation is not yet participation</b>, but it is a long way past a homepage note."
+    },
+    { k:"D", label:"Stay quiet. It'll cool down.",
+      detail:"We've published the correction. Arguing with a protest movement helps nobody.",
+      s:{rigor:0, tempo:-2, trust:-3, nerve:-2}, flags:["wentquiet"],
+      out:[{t:"you", text:"We've said what's true. Let it cool."},
+           {t:"msg", who:"priya", lines:["It won't cool. It'll set.","In six months 'the Western press covered for the geoengineering company' will be the settled version here, and we'll have earned it by being absent for the only part of this story that was ever really about them."]}],
+      note:"Withdrawal at the point where trust is actually determined. The narrative <b>does not dissipate, it consolidates</b> — and the version that consolidates is the one written by whoever was still in the conversation."
+    }
+  ],
+  timeoutOpt:{ label:"Nothing further was published.",
+    s:{rigor:0, tempo:-3, trust:-3, nerve:-2}, flags:["wentquiet"],
+    out:[{t:"msg", who:"priya", lines:["Nothing went out. I'm coming home.","For what it's worth, I think we did the science well and the people badly."]}],
+    note:"Priya's last line is the one to sit with in the debrief: <b>doing the science well and the people badly</b> is a complete description of how technically accurate journalism loses public trust."
+  }
+}
+];
+
+/* ============================================================
+   ARCHETYPES — keyed on (strongest axis, weakest axis).
+
+   Three shapes are deliberately absent: trust|nerve, trust|rigor and
+   nerve|rigor. In this scenario every trust-building action also demands
+   courage or evidence discipline, so a trust-led profile is unreachable
+   even under play optimised for it. Rather than distort the scoring to
+   populate a tidier taxonomy, those labels are omitted and the balanced /
+   passenger fallback covers them if the spine is ever rebalanced.
+   ============================================================ */
+const AXES = [
+  {k:"rigor", n:"RIGOUR", c:"RIG", g:"Proportion between what you claimed and what you could show."},
+  {k:"tempo", n:"TEMPO",  c:"TMP", g:"Whether you met the moment or were overtaken by it."},
+  {k:"trust", n:"TRUST",  c:"TRU", g:"Standing with your audience, your sources and your own newsroom."},
+  {k:"nerve", n:"NERVE",  c:"NRV", g:"Independence under political, commercial and legal pressure."}
+];
+
+const ARCHETYPES = {
+  balanced:{ t:"THE EDITOR",
+    d:"You held four things in tension that mostly pull against each other, and you did it under a clock. This profile is uncommon — it usually means you accepted a real cost on every axis rather than optimising one and telling yourself the others were someone else's problem. Read your decision log for where you paid." },
+  "tempo|rigor":{ t:"THE WIRE",
+    d:"First, loud, and ahead of your evidence. You were never overtaken and you were repeatedly wrong in public. The instinct that makes you fast — treating publication as the reflex — is the same instinct that put a press office's framing into four million pockets. Speed is a genuine editorial virtue; it is only a virtue downstream of verification." },
+  "rigor|tempo":{ t:"THE VAULT",
+    d:"Careful, correct, and lapped. Almost nothing you published was wrong; a great deal of it arrived after the frame had set without you. The uncomfortable finding of this simulation is that rigour delivered late is not neutral — the vacuum you left was filled by people with less reason to be careful." },
+  "nerve|trust":{ t:"THE FORTRESS",
+    d:"You did not fold — not to a minister, not to a founder, not to your own audience. You also did not concede, correct loudly, or treat criticism as information. Independence hardened into imperviousness. The failure mode is subtle: never wrong in your own account, and increasingly alone in holding it." },
+  "tempo|trust":{ t:"THE CANNON",
+    d:"Fast, decisive, and expensive in relationships. You met every moment and spent a source, a colleague or an audience doing it. The reach was real. So was the attrition — and in a story that ran for days, the people you spent were the ones who would have handed you the correction." },
+  "rigor|trust":{ t:"THE AUDITOR",
+    d:"Your evidence discipline was genuinely strong and it was applied to documents rather than to people. Hallam, Priya and the protest were all sources of information you handled as material rather than as relationships. The methodological calls were sound; the human ones cost you the story's second half." },
+  "tempo|nerve":{ t:"THE CONDUIT",
+    d:"You were quick and you were permeable. The pressure that arrived — competitive, political, commercial — mostly passed straight through into the coverage. Fast reflexes without a hard editorial centre make a publication into an amplifier of whoever is loudest at the time, which is the mechanism this whole story runs on." },
+  "trust|tempo":{ t:"THE STEWARD",
+    d:"You protected your relationships and your record, and you were consistently a beat behind. Every individual pause was defensible. Their sum was a publication that arrived after the story it was trying to shape, holding the trust of a room that had already moved on." },
+  "nerve|tempo":{ t:"THE HOLDOUT",
+    d:"You refused the trades — the access clause, the political framing, the competitive panic — and you refused them slowly. The principles were right and they were expensive. Note in your log how often the correct refusal also meant the evidence went unexamined by anyone." },
+  "rigor|nerve":{ t:"THE TECHNICIAN",
+    d:"Methodologically excellent and institutionally quiet. You read the paper, you found the gap, and then you let ministers, founders and rivals set what the finding meant. Getting the science right is the first half of the job; the second half is being willing to say so where it is unwelcome." },
+  passenger:{ t:"THE PASSENGER",
+    d:"No axis finished as a strength. This is the profile of a desk that was carried by the story rather than steering it — options taken because they were in front of you, or clocks that ran out while you weighed them. Check your log for entries marked NO DECISION: in a story moving this fast the absence of an editorial choice is filled within minutes, by a press office, a sub-editor or a rival, and the resulting coverage still goes out under your masthead." }
+};
+
+/* ============================================================
+   ENGINE
+   ============================================================ */
+const state = {
+  name:"", untimed:false, i:0,
+  s:{rigor:0, tempo:0, trust:0, nerve:0},
+  flags:[], log:[], timer:null, deadline:0, answered:false
+};
+
+const $ = id => document.getElementById(id);
+const thread = $("thread"), sheetHost = $("sheetHost");
+const esc = s => String(s).replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+function scrollDown(){
+  requestAnimationFrame(()=>{ thread.scrollTop = thread.scrollHeight; });
+}
+function add(html, cls){
+  const d = document.createElement("div");
+  d.className = "enter " + (cls||"");
+  d.innerHTML = html;
+  thread.appendChild(d);
+  scrollDown();
+  return d;
+}
+const wait = ms => new Promise(r => setTimeout(r, reduced ? Math.min(ms,90) : ms));
+
+/* ---- renderers ---- */
+function renderMsg(m){
+  if(m.t === "wire"){
+    const p = (m.prio||"BULLETIN");
+    return add(
+      `<div class="wire ${p.toLowerCase()}">
+         <div class="prio"><span>◼ ${esc(p)}</span><span>${esc(m.src||"WIRE")}</span></div>
+         <div class="hed">${esc(m.hed)}</div>
+         ${m.sub ? `<div class="sub">${esc(m.sub)}</div>` : ""}
+       </div>`);
+  }
+  if(m.t === "sys"){
+    return add(`<div class="sysnote">${m.text}</div>`);
+  }
+  if(m.t === "you"){
+    return add(`<div class="out"><div class="who">${esc(state.name||"You")}</div>
+       <div class="bubble">${esc(m.text)}</div></div>`);
+  }
+  if(m.t === "article"){
+    return add(
+      `<div class="article">
+         <div class="kicker">${esc(m.kicker)}</div>
+         <h4>${esc(m.h)}</h4>
+         <p>${esc(m.p)}</p>
+       </div>`);
+  }
+  if(m.t === "post"){
+    const eng = (m.eng||[]).map(e => `<span>${esc(e[0])} <b>${esc(e[1])}</b></span>`).join("");
+    return add(
+      `<div class="post">
+         <div class="top">
+           <div class="pav">${esc(m.i)}</div>
+           <div>
+             <div class="nm">${esc(m.who)}${m.v ? '<i>✓</i>' : ''}</div>
+             <div class="hd">${esc(m.handle)}</div>
+           </div>
+         </div>
+         <div class="txt">${esc(m.text)}</div>
+         <div class="eng">${eng}</div>
+       </div>`);
+  }
+  /* person message */
+  const p = CAST[m.who];
+  const bubbles = m.lines.map((l,ix) =>
+    `<div class="bubble">${esc(l)}${(ix === m.lines.length-1 && m.att) ? `<div class="att">${m.att}</div>` : ""}</div>`
+  ).join("");
+  return add(
+    `<div class="msg">
+       <div class="av">${esc(p.i)}</div>
+       <div class="body">
+         <div class="who"><b>${esc(p.n)}</b> · ${esc(p.r)}</div>
+         ${bubbles}
+       </div>
+     </div>`);
+}
+
+async function typingFor(who, ms){
+  const p = CAST[who];
+  const el = add(`<div class="typing">
+      <div class="av" style="margin-top:0">${esc(p.i)}</div>
+      <div class="dots"><i></i><i></i><i></i></div>
+    </div>`);
+  await wait(ms);
+  el.remove();
+}
+
+async function playInjects(list){
+  for(const m of list){
+    if(m.t === "msg"){ await typingFor(m.who, 700 + m.lines.length*300); }
+    else { await wait(420); }
+    renderMsg(m);
+    await wait(320);
+  }
+}
+
+/* ---- standing rail ---- */
+function pulseRail(delta){
+  const segs = $("rail").children;
+  ["rigor","tempo","trust","nerve"].forEach((k,ix)=>{
+    const seg = segs[ix], bar = seg.querySelector("i");
+    const norm = Math.max(0, Math.min(1, 0.5 + state.s[k]/34));
+    bar.style.transform = `scaleX(${norm.toFixed(3)})`;
+    seg.classList.remove("up","down");
+    if(delta[k] > 0) seg.classList.add("up");
+    else if(delta[k] < 0) seg.classList.add("down");
+    setTimeout(()=> seg.classList.remove("up","down"), 1600);
+  });
+}
+
+/* ---- rounds ---- */
+async function runRound(){
+  const r = ROUNDS[state.i];
+  if(!r) return finish();
+
+  state.answered = false;
+  $("clockLabel").textContent = r.clock;
+
+  add(`<div class="clock">— ${esc(r.act)} · ${esc(r.clock)} —</div>`);
+  await wait(500);
+  await playInjects(r.injects);
+  await wait(250);
+  showSheet(r);
+}
+
+function showSheet(r){
+  const opts = r.options.map((o,ix)=>
+    `<button class="opt" data-ix="${ix}">
+       <span class="key">${esc(o.k)}</span>
+       <span><strong>${esc(o.label)}</strong><em>${esc(o.detail)}</em></span>
+     </button>`).join("");
+
+  sheetHost.innerHTML =
+    `<div class="sheet" data-open="false" id="sheet">
+       <button class="handle" id="sheetToggle" aria-expanded="false" aria-controls="sbody">
+         <span class="hrow">
+           <span>DECISION ${r.id} / 10 · ${esc(r.prompt)}</span>
+           <span>${state.untimed ? "UNTIMED" : "ON THE CLOCK"}</span>
+         </span>
+         <span class="hcta">
+           <span id="ctaLabel">DECIDE WHAT TO DO</span>
+           <span class="ctaright">
+             ${state.untimed ? "" : `<span class="cd" id="cd">${r.secs}s</span>`}
+             <span class="chev">▲</span>
+           </span>
+         </span>
+       </button>
+       <div class="fuse"><i id="fuse"></i></div>
+       <div class="sbody" id="sbody">
+         <div class="q">${esc(r.q)}</div>
+         <div class="opts">${opts}</div>
+       </div>
+     </div>`;
+
+  sheetHost.querySelectorAll(".opt").forEach(b=>{
+    b.addEventListener("click", ()=> choose(r, r.options[+b.dataset.ix]));
+  });
+  $("sheetToggle").addEventListener("click", ()=> toggleSheet());
+
+  if(!state.untimed) startTimer(r);
+}
+
+/* Open on request rather than on arrival, so the injects stay readable.
+   Passing a boolean forces a state; omitting it flips. */
+function toggleSheet(force){
+  const sheet = $("sheet");
+  if(!sheet) return;
+  const open = force === undefined ? sheet.dataset.open !== "true" : !!force;
+  sheet.dataset.open = open ? "true" : "false";
+  $("sheetToggle").setAttribute("aria-expanded", open ? "true" : "false");
+  $("ctaLabel").textContent = open ? "HIDE AND RE-READ" : "DECIDE WHAT TO DO";
+  if(!open) scrollDown();
+}
+
+function startTimer(r){
+  clearInterval(state.timer);
+  state.deadline = Date.now() + r.secs*1000;
+  const fuse = $("fuse"), cd = $("cd");
+  fuse.style.transition = "none";
+  fuse.style.transform = "scaleX(1)";
+  void fuse.offsetWidth;
+  fuse.style.transition = `transform ${r.secs}s linear, background .4s`;
+  fuse.style.transform = "scaleX(0)";
+
+  state.timer = setInterval(()=>{
+    const left = Math.max(0, Math.ceil((state.deadline - Date.now())/1000));
+    if(cd) {
+      cd.textContent = left + "s";
+      if(left <= 10){
+        cd.classList.add("hot"); fuse.classList.add("hot");
+        // Last call. Reading time is over; make sure the options are in front
+        // of them rather than letting the clock expire on a hidden sheet.
+        toggleSheet(true);
+      }
+    }
+    if(left <= 0){
+      clearInterval(state.timer);
+      if(!state.answered) choose(r, r.timeoutOpt, true);
+    }
+  }, 250);
+}
+
+async function choose(r, opt, timedOut){
+  if(state.answered) return;
+  state.answered = true;
+  clearInterval(state.timer);
+
+  sheetHost.querySelectorAll(".opt").forEach(b => b.setAttribute("disabled",""));
+  await wait(180);
+  sheetHost.innerHTML = "";
+
+  AXES.forEach(a => state.s[a.k] += (opt.s[a.k]||0));
+  (opt.flags||[]).forEach(f => state.flags.push(f));
+  state.log.push({ round:r.id, prompt:r.prompt, clock:r.clock,
+                   label:opt.label, note:opt.note, s:opt.s, timedOut:!!timedOut });
+
+  if(timedOut){
+    add(`<div class="sysnote"><b>⏱ ${esc(opt.label)}</b> — the clock ran out and the story moved without you.</div>`);
+    await wait(500);
+  }
+
+  await playInjects(opt.out || []);
+  pulseRail(opt.s);
+
+  await wait(1100);
+  state.i++;
+  runRound();
+}
+
+/* ---- debrief ---- */
+/* An archetype is a shape, not a rank. We look at how lopsided the four
+   axes are relative to each other; only if no axis clearly dominates do we
+   fall through to a balanced profile — and then absolute performance
+   decides whether that balance was command or drift. */
+function archetypeFor(){
+  const vals = AXES.map(a => ({k:a.k, v:state.s[a.k]})).sort((a,b)=> b.v - a.v);
+  const hi = vals[0], lo = vals[vals.length-1];
+  const avg = vals.reduce((t,x)=> t + x.v, 0) / vals.length;
+
+  /* If nothing became a strength, the shape is noise — a run of expired
+     clocks would otherwise read as whichever axis decayed slowest. */
+  if(hi.v <= 2) return ARCHETYPES.passenger;
+
+  if(hi.v - lo.v <= 8){
+    return avg >= 6 ? ARCHETYPES.balanced : ARCHETYPES.passenger;
+  }
+  return ARCHETYPES[hi.k + "|" + lo.k] || (avg >= 6 ? ARCHETYPES.balanced : ARCHETYPES.passenger);
+}
+
+function finish(){
+  const arch = archetypeFor();
+  const maxAbs = 24;
+
+  const axesHtml = AXES.map(a=>{
+    const v = state.s[a.k];
+    const pct = Math.max(3, Math.min(100, Math.round((v + maxAbs) / (maxAbs*2) * 100)));
+    const cls = v >= 8 ? "high" : (v <= -4 ? "low" : "");
+    return `<div class="axis">
+      <div class="aline"><span class="nm">${a.n}</span><span class="vl">${v>0?"+":""}${v}</span></div>
+      <div class="track"><i class="${cls}" style="width:${pct}%"></i></div>
+      <div class="gloss">${a.g}</div>
+    </div>`;
+  }).join("");
+
+  const logHtml = state.log.map(e=>{
+    const sum = AXES.reduce((t,a)=> t + (e.s[a.k]||0), 0);
+    const mark = e.timedOut ? ["b","NO DECISION"] : (sum >= 7 ? ["g","STRONG"] : sum <= -2 ? ["b","COSTLY"] : ["m","MIXED"]);
+    return `<div class="entry">
+      <div class="etop"><span>${e.round}. ${esc(e.prompt)} · ${esc(e.clock)}</span><span class="mark ${mark[0]}">${mark[1]}</span></div>
+      <div class="ch">${esc(e.label)}</div>
+      <div class="nt">${e.note}</div>
+    </div>`;
+  }).join("");
+
+  const code = AXES.map(a => a.c + " " + (state.s[a.k]>=0?"+":"") + state.s[a.k]).join("  ·  ");
+
+  const d = document.createElement("div");
+  d.className = "debrief";
+  d.innerHTML = `
+    <div class="dh">
+      <div class="eyebrow">DEBRIEF · BACKLASH · 10 DECISIONS</div>
+      <div class="arche">${esc(arch.t)}</div>
+      <div class="adesc">${esc(arch.d)}</div>
+      <div class="who2">${esc(state.name || "UNNAMED DESK")} · ${state.untimed ? "UNTIMED" : "TIMED"}</div>
+    </div>
+
+    <div class="axes">${axesHtml}</div>
+
+    <div class="sect">
+      <h3>WHAT WAS ACTUALLY TRUE</h3>
+      <div class="reveal">
+        <p><b>Kestrel Climate did not cause the monsoon failure.</b> The collapse tracked a record Indian Ocean Dipole event. The dispersal volumes were roughly 1/400th of what a detectable monsoon effect would require. The preprint's attribution was not fraudulent — it was thin, and its university press office made it into something it never claimed.</p>
+        <p><b>Kestrel did do something reckless, unauthorised and precedent-setting</b> — and no legal instrument existed to stop it. That question was never resolved by any of the reporting.</p>
+        <p>Both of those are true at once. Every failure in this simulation comes from a structure — a headline, an alert, a clip, a correction — that could only carry one of them.</p>
+      </div>
+    </div>
+
+    <div class="sect">
+      <h3>YOUR DECISION LOG</h3>
+      <div class="log">${logHtml}</div>
+    </div>
+
+    <div class="sect">
+      <h3>FOR THE FACILITATOR</h3>
+      <div class="codebox">
+        <b>${esc(state.name || "UNNAMED")}</b> · ${esc(arch.t)}<br>${esc(code)}
+      </div>
+      <button class="btn ghost" id="copyBtn" style="margin-top:10px">COPY RESULT</button>
+      <button class="btn" id="againBtn" style="margin-top:8px">RUN IT AGAIN</button>
+      <div class="fineprint">Entirely fictional. Built as a workshop instrument — the decision log above is the teaching material, not the score.</div>
+    </div>
+  `;
+  document.querySelector(".device").appendChild(d);
+
+  $("copyBtn").addEventListener("click", ()=>{
+    const txt = `BACKLASH — ${state.name||"unnamed"} — ${arch.t} — ${code}`;
+    navigator.clipboard?.writeText(txt);
+    $("copyBtn").textContent = "COPIED ✓";
+  });
+  $("againBtn").addEventListener("click", ()=> location.reload());
+}
+
+/* ---- viewport ----
+   The software keyboard changes the visual viewport without changing the
+   layout viewport, so a 100dvh app is left the wrong height once it closes.
+   Track the real height and reset any scroll the browser applied. */
+function fitViewport(){
+  const vv = window.visualViewport;
+  const h = vv ? vv.height : window.innerHeight;
+  document.documentElement.style.setProperty("--vh", h + "px");
+  if(window.scrollY !== 0) window.scrollTo(0, 0);
+}
+if(window.visualViewport){
+  visualViewport.addEventListener("resize", fitViewport);
+  visualViewport.addEventListener("scroll", fitViewport);
+}
+window.addEventListener("resize", fitViewport);
+window.addEventListener("orientationchange", ()=> setTimeout(fitViewport, 120));
+// a blurred field is the moment the keyboard retracts
+document.addEventListener("focusout", ()=> setTimeout(fitViewport, 60), true);
+fitViewport();
+
+/* ---- lobby ---- */
+$("openAlert").addEventListener("click", ()=>{
+  $("openAlert").style.display = "none";
+  $("brief").hidden = false;
+  // Deliberately not focusing the name field: on a phone that pops the
+  // keyboard and scrolls the briefing off screen, and the briefing is the
+  // part that makes the next twenty minutes make sense.
+  $("lobby").scrollTop = 0;
+});
+$("startBtn").addEventListener("click", ()=>{
+  state.name = ($("playerName").value || "").trim().slice(0,28);
+  state.untimed = $("untimed").checked;
+  $("lobby").remove();
+  runRound();
+});
+$("playerName").addEventListener("keydown", e=>{ if(e.key === "Enter") $("startBtn").click(); });
+
+/* keyboard: A-D select once open, Enter/Escape toggle the sheet */
+document.addEventListener("keydown", e=>{
+  const sheet = $("sheet");
+  if(!sheet) return;
+  const open = sheet.dataset.open === "true";
+
+  if(e.key === "Escape"){ toggleSheet(false); return; }
+  if(e.key === "Enter" || e.key === " "){
+    if(!open && document.activeElement?.id !== "sheetToggle"){ e.preventDefault(); toggleSheet(true); }
+    return;
+  }
+
+  const k = e.key.toUpperCase();
+  if(!"ABCD".includes(k)) return;
+  // While collapsed a letter reveals the options rather than blind-picking one.
+  if(!open){ toggleSheet(true); return; }
+  const btns = sheetHost.querySelectorAll(".opt");
+  const ix = "ABCD".indexOf(k);
+  if(btns[ix]) btns[ix].click();
+});
+</script>
